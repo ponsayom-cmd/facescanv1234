@@ -6,7 +6,7 @@
  */
 
 // --- CONFIGURATION ---
-const SPREADSHEET_ID = '1CX7ZiydEDvLtu9N9GvFdoR78gwbinDnCh1ZoHpMEeg0'; // <-- ใส่ ID ของ Google Sheet ของคุณที่นี่
+const SPREADSHEET_ID = '1fH3vja5YDJgq789qK3bsSs2xifLzN0S9gG-KR2e2NgU'; // <-- ใส่ ID ของ Google Sheet ของคุณที่นี่
 const STUDENT_SHEET_NAME = 'Students';
 const ATTENDANCE_SHEET_NAME = 'Attendance';
 const SUBJECT_SHEET_NAME = 'Subjects';
