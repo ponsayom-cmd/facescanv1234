@@ -3,37 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ลงทะเบียนใบหน้า - ป้องกันการลงทะเบียนซ้ำ</title>
+  <title>ลงทะเบียนใบหน้า - ระบบป้องกันการซ้ำ</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
     :root { --primary: #4f46e5; --error: #ef4444; --success: #10b981; }
-    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
-    #videoContainer { position: relative; width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+    .card { background: white; padding: 30px; border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 480px; text-align: center; }
+    #videoContainer { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; border-radius: 50%; overflow: hidden; margin-bottom: 25px; border: 4px solid #e2e8f0; }
     video { width: 100%; height: 100%; object-fit: cover; }
-    input { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
-    button { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 16px; }
-    button:disabled { background: #94a3b8; cursor: not-allowed; }
-    #status { margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px; }
-    .status-error { color: var(--error); }
-    .status-success { color: var(--success); }
-    .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; align-items: center; justify-content: center; z-index: 10; display: none; }
+    input { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px; font-size: 16px; outline: none; transition: border 0.2s; }
+    input:focus { border-color: var(--primary); }
+    button { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4); }
+    button:disabled { background: #cbd5e1; cursor: not-allowed; box-shadow: none; }
+    #status { margin-top: 20px; font-size: 15px; font-weight: 600; padding: 10px; border-radius: 8px; }
+    .status-error { background: #fef2f2; color: var(--error); border: 1px solid #fee2e2; }
+    .status-success { background: #f0fdf4; color: var(--success); border: 1px solid #dcfce7; }
+    .loader { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; flex-direction: column; align-items: center; justify-content: center; color: white; z-index: 5; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2 style="margin-bottom:10px;">👤 ลงทะเบียนนักศึกษา</h2>
-  <p style="font-size:14px; color:#64748b; margin-bottom:20px;">กรุณามองกล้องและใส่รหัสนักศึกษา</p>
+  <h2 style="margin:0 0 10px 0;">🎓 ลงทะเบียนใบหน้านักศึกษา</h2>
+  <p style="color:#64748b; font-size:14px; margin-bottom:25px;">มองที่กล้องเพื่อให้ระบบจดจำใบหน้า</p>
 
   <div id="videoContainer">
     <video id="video" autoplay muted playsinline></video>
-    <div id="loader" class="loading-overlay">⏳ กำลังตรวจสอบใบหน้า...</div>
+    <div id="loader" class="loader">
+      <div style="font-size:24px;">⌛</div>
+      <div style="margin-top:10px;">กำลังประมวลผล...</div>
+    </div>
   </div>
 
-  <input type="text" id="studentName" placeholder="ระบุชื่อหรือรหัสนักศึกษา">
-  <button id="regBtn" onclick="handleRegistration()" disabled>กรุณารอโหลดโมเดล...</button>
+  <input type="text" id="studentName" placeholder="ระบุรหัสนักศึกษา (เช่น 65010123)">
+  <button id="regBtn" onclick="handleRegistration()" disabled>กำลังโหลด AI Models...</button>
   <div id="status"></div>
 </div>
 
@@ -44,7 +48,7 @@
   const statusDiv = document.getElementById('status');
   const loader = document.getElementById('loader');
   
-  let knownFaces = []; // เก็บข้อมูลใบหน้าที่ลงทะเบียนแล้วมาเทียบ
+  let faceMatcher = null;
 
   async function init() {
     try {
@@ -54,75 +58,75 @@
         faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model')
       ]);
       
-      const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
       video.srcObject = stream;
       
-      // ดึงข้อมูลใบหน้าที่มีอยู่แล้วมาเตรียมพร้อม
-      if (API_URL) {
-        const res = await fetch(API_URL + "?action=getKnownFaces");
-        const data = await res.json();
-        knownFaces = data.faces || [];
-      }
+      // ดึงข้อมูลใบหน้าทั้งหมดมาสร้าง Matcher ทันที
+      await refreshFaceMatcher();
 
-      regBtn.innerText = "ลงทะเบียนใบหน้า";
+      regBtn.innerText = "ยืนยันและบันทึกใบหน้า";
       regBtn.disabled = false;
-      statusDiv.innerText = "✅ ระบบพร้อมใช้งาน";
-      statusDiv.className = "status-success";
+      showStatus("✅ ระบบพร้อมสำหรับการลงทะเบียน", "success");
     } catch (err) {
-      statusDiv.innerText = "❌ เกิดข้อผิดพลาดในการโหลดระบบ";
-      statusDiv.className = "status-error";
-      console.error(err);
+      showStatus("❌ ไม่สามารถเข้าถึงกล้องหรือโหลด AI ได้", "error");
     }
   }
 
+  async function refreshFaceMatcher() {
+    if (!API_URL) return;
+    try {
+      const res = await fetch(API_URL + "?action=getKnownFaces");
+      const data = await res.json();
+      if (data.faces && data.faces.length > 0) {
+        const labeled = data.faces.map(f => 
+          new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d)))
+        );
+        faceMatcher = new faceapi.FaceMatcher(labeled, 0.5); // ปรับค่า Threshold ให้เข้มงวด (0.5)
+      }
+    } catch (e) { console.error("Face Loading Error:", e); }
+  }
+
+  function showStatus(text, type) {
+    statusDiv.innerText = text;
+    statusDiv.className = type === "error" ? "status-error" : "status-success";
+    statusDiv.style.display = "block";
+  }
+
   async function handleRegistration() {
-    const name = document.getElementById('studentName').value.trim();
+    const nameInput = document.getElementById('studentName');
+    const name = nameInput.value.trim();
+    
     if (!name) {
-      alert("กรุณาระบุชื่อหรือรหัสนักศึกษา");
+      alert("กรุณาระบุรหัสนักศึกษา");
       return;
     }
 
     regBtn.disabled = true;
     loader.style.display = "flex";
-    statusDiv.innerText = "🔍 กำลังประมวลผลใบหน้า...";
+    showStatus("🔍 กำลังสแกนและตรวจสอบใบหน้าซ้ำ...", "success");
 
     const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
     
     if (!detection) {
-      statusDiv.innerText = "❌ ไม่พบใบหน้า กรุณามองที่กล้องตรงๆ";
-      statusDiv.className = "status-error";
-      regBtn.disabled = false;
-      loader.style.display = "none";
+      showStatus("❌ ไม่พบใบหน้า กรุณาขยับหน้าให้อยู่กลางวงกลม", "error");
+      resetUI();
       return;
     }
 
-    // --- ส่วนตรวจสอบการลงทะเบียนซ้ำ (Face Matching) ---
-    let isDuplicate = false;
-    let existingOwner = "";
-
-    if (knownFaces.length > 0) {
-      const labeledDescriptors = knownFaces.map(f => 
-        new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d)))
-      );
-      const faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6); // ค่าความเข้มงวด 0.6
+    // --- กระบวนการตรวจสอบใบหน้าซ้ำ ---
+    if (faceMatcher) {
       const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-
-      // ถ้าชื่อที่ตรวจเจอ ไม่ใช่ "unknown" และไม่ใช่ชื่อที่เรากำลังจะลงทะเบียน (เพื่อให้อัปเดตชื่อเดิมได้)
-      if (bestMatch.label !== 'unknown' && bestMatch.label !== name) {
-        isDuplicate = true;
-        existingOwner = bestMatch.label;
+      
+      // หากพบว่าใบหน้าคล้ายกับคนที่มีในระบบ (ยกเว้นรหัสเดิมของตัวเอง)
+      if (bestMatch.label !== 'unknown' && bestMatch.label.toLowerCase() !== name.toLowerCase()) {
+        showStatus(`⚠️ พบใบหน้านี้ลงทะเบียนไว้แล้วในชื่อ: ${bestMatch.label}`, "error");
+        alert(`❌ ปฏิเสธการลงทะเบียน: ใบหน้านี้เป็นของ ${bestMatch.label} อยู่แล้ว ไม่สามารถลงทะเบียนซ้ำได้`);
+        resetUI();
+        return;
       }
     }
 
-    if (isDuplicate) {
-      statusDiv.innerHTML = `❌ ใบหน้านี้ถูกลงทะเบียนไว้แล้วในชื่อ: <br><strong style="font-size:18px;">${existingOwner}</strong>`;
-      statusDiv.className = "status-error";
-      regBtn.disabled = false;
-      loader.style.display = "none";
-      return;
-    }
-
-    // --- หากไม่ซ้ำ ให้ทำการบันทึก ---
+    // --- หากผ่านการตรวจสอบ ให้ส่งข้อมูลไป Backend ---
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
@@ -135,19 +139,20 @@
       const result = await response.json();
       
       if (result.success) {
-        statusDiv.innerText = "✅ " + result.message;
-        statusDiv.className = "status-success";
-        // อัปเดตข้อมูล Local ไว้ด้วยกันสแกนซ้ำทันที
-        knownFaces.push({ name: name, descriptors: [Array.from(detection.descriptor)] });
-        document.getElementById('studentName').value = "";
+        showStatus("🎉 " + result.message, "success");
+        nameInput.value = "";
+        await refreshFaceMatcher(); // อัปเดตฐานข้อมูลจำลองในเครื่องทันที
       }
     } catch (err) {
-      statusDiv.innerText = "❌ บันทึกไม่สำเร็จ กรุณาลองใหม่";
-      statusDiv.className = "status-error";
+      showStatus("❌ บันทึกไม่สำเร็จ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ต", "error");
     } finally {
-      regBtn.disabled = false;
-      loader.style.display = "none";
+      resetUI();
     }
+  }
+
+  function resetUI() {
+    regBtn.disabled = false;
+    loader.style.display = "none";
   }
 
   init();
