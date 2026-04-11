@@ -3,118 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Classroom Setup</title>
+  <title>จัดการรายวิชา - Config</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background-color: var(--bg);
-      color: #f8fafc;
-      display: flex;
-      justify-content: center;
-      padding: 40px 20px;
-    }
-    .card {
-      background: var(--card);
-      width: 100%;
-      max-width: 450px;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      border: 1px solid #334155;
-    }
-    h2 { text-align: center; margin-bottom: 25px; color: var(--primary); }
-    .field { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
-    input {
-      width: 100%;
-      padding: 12px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 10px;
-      color: white;
-      font-size: 16px;
-    }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn:hover { background: #4f46e5; }
-    .status {
-      margin-top: 15px;
-      text-align: center;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      display: none;
-    }
+    :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f8fafc; }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: #1e293b; padding: 20px; margin: 0; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    h2 { margin-top: 0; color: var(--primary); font-size: 1.5rem; }
+    
+    .form-group { margin-bottom: 15px; text-align: left; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
+    input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+    
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
+    .btn-save { background: var(--primary); color: white; }
+    .btn-delete { background: var(--danger); color: white; padding: 8px 12px; font-size: 12px; width: auto; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 12px; overflow: hidden; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+    th { background: #f1f5f9; color: #64748b; }
+    
+    .api-section { font-size: 12px; color: #64748b; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>⚙️ ตั้งค่าระบบเช็คชื่อ</h2>
-  
-  <div class="field">
-    <label>Google Apps Script URL:</label>
-    <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+<div class="container">
+  <div class="card">
+    <h2>➕ เพิ่มรายวิชาใหม่</h2>
+    <div class="form-group">
+      <label>รหัสวิชา</label>
+      <input type="text" id="subId" placeholder="เช่น CS101">
+    </div>
+    <div class="form-group">
+      <label>ชื่อวิชา</label>
+      <input type="text" id="subName" placeholder="เช่น โปรแกรมมิ่ง 1">
+    </div>
+    <div class="form-group">
+      <label>ห้องเรียน</label>
+      <input type="text" id="subRoom" placeholder="เช่น Lab 4">
+    </div>
+    <div class="form-group">
+      <label>เวลาที่เริ่มเช็คสาย (HH:mm)</label>
+      <input type="time" id="subLate" value="09:00">
+    </div>
+    <button class="btn btn-save" onclick="addSubject()">บันทึกลง Google Sheets</button>
   </div>
 
-  <div class="field">
-    <label>ชื่อวิชาเรียน:</label>
-    <input type="text" id="subject" placeholder="เช่น วิทยาศาสตร์ ม.3">
+  <div class="card">
+    <h2>📚 รายวิชาทั้งหมด</h2>
+    <div id="loading">กำลังโหลดข้อมูล...</div>
+    <table id="subjectTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>รหัส</th>
+          <th>ชื่อวิชา</th>
+          <th>ห้อง</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="subjectList"></tbody>
+    </table>
   </div>
 
-  <div class="field">
-    <label>ห้องเรียน:</label>
-    <input type="text" id="room" placeholder="เช่น ห้อง 421">
+  <div class="api-section">
+    <p>API URL ปัจจุบัน:</p>
+    <input type="text" id="apiUrl" style="font-size: 10px;" onchange="saveApiUrl()">
+    <p style="margin-top:5px;">*หากมีการแก้ไขโค้ดใน Apps Script ต้อง Deploy เป็น New Version เสมอ</p>
   </div>
-
-  <button class="btn" onclick="save()">บันทึกข้อมูลวิชา</button>
-  <div id="status" class="status"></div>
 </div>
 
 <script>
-  // โหลด API URL จาก localStorage
-  document.getElementById('apiUrl').value = localStorage.getItem('gasApiUrl') || '';
+  let API_URL = localStorage.getItem('gasApiUrl') || "";
+  document.getElementById('apiUrl').value = API_URL;
 
-  async function save() {
-    const apiUrl = document.getElementById('apiUrl').value.trim();
-    const subject = document.getElementById('subject').value;
-    const room = document.getElementById('room').value;
+  function saveApiUrl() {
+    API_URL = document.getElementById('apiUrl').value.trim();
+    localStorage.setItem('gasApiUrl', API_URL);
+    loadSubjects();
+  }
 
-    if (!apiUrl) return alert('กรุณาระบุ URL ของระบบหลังบ้าน');
-    localStorage.setItem('gasApiUrl', apiUrl);
-
-    const status = document.getElementById('status');
-    status.style.display = 'block';
-    status.innerText = '⏳ กำลังบันทึก...';
-    status.style.background = '#334155';
-
+  async function loadSubjects() {
+    if (!API_URL) return;
     try {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'saveConfig', subject, room })
-      });
+      const res = await fetch(API_URL + "?action=getSubjects");
       const data = await res.json();
-      status.innerText = '✅ บันทึกสำเร็จ: ระบบพร้อมเช็คชื่อวิชา ' + subject;
-      status.style.background = 'rgba(16, 185, 129, 0.2)';
-      status.style.color = '#10b981';
+      const list = document.getElementById('subjectList');
+      list.innerHTML = "";
+      
+      data.subjects.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${s.id}</b></td>
+          <td>${s.name}</td>
+          <td>${s.room}</td>
+          <td><button class="btn btn-delete" onclick="deleteSubject('${s.id}')">ลบ</button></td>
+        `;
+        list.appendChild(tr);
+      });
+      
+      document.getElementById('loading').style.display = "none";
+      document.getElementById('subjectTable').style.display = "table";
     } catch (e) {
-      status.innerText = '❌ ผิดพลาด: ' + e.message;
-      status.style.background = 'rgba(239, 68, 68, 0.2)';
-      status.style.color = '#ef4444';
+      document.getElementById('loading').innerText = "❌ ไม่สามารถโหลดข้อมูลได้";
     }
   }
+
+  async function addSubject() {
+    const id = document.getElementById('subId').value.trim();
+    const name = document.getElementById('subName').value.trim();
+    const room = document.getElementById('subRoom').value.trim();
+    const late = document.getElementById('subLate').value;
+
+    if (!id || !name) return alert("กรุณากรอกรหัสและชื่อวิชา");
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'addSubject', id, name, room, lateTime: late })
+      });
+      const result = await res.json();
+      alert(result.message);
+      location.reload();
+    } catch (e) {
+      alert("❌ เกิดข้อผิดพลาด");
+    }
+  }
+
+  async function deleteSubject(id) {
+    if (!confirm(`คุณต้องการลบวิชา ${id} ใช่หรือไม่?`)) return;
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'deleteSubject', id })
+      });
+      const result = await res.json();
+      alert(result.message);
+      loadSubjects();
+    } catch (e) {
+      alert("❌ ลบไม่สำเร็จ");
+    }
+  }
+
+  if (API_URL) loadSubjects();
 </script>
 </body>
 </html>
