@@ -10,195 +10,165 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Sarabun', sans-serif;
-      background: #f8fafc;
-      color: #334155;
+      background: #f0f2f5;
+      color: #1c1e21;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 15px;
+      padding: 20px;
     }
     .container {
       width: 100%;
-      max-width: 500px;
-      background: white;
-      padding: 25px;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      max-width: 450px;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       text-align: center;
     }
-    h2 { margin-bottom: 20px; color: #1e293b; font-weight: 700; }
+    h2 { margin-bottom: 20px; color: #1877f2; }
     #video {
       width: 100%;
-      border-radius: 16px;
+      border-radius: 12px;
       background: #000;
       transform: scaleX(-1);
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
-    .input-group { margin-bottom: 15px; text-align: left; }
-    label { font-size: 0.9rem; font-weight: 600; color: #64748b; margin-left: 4px; }
+    .form-group { text-align: left; margin-bottom: 15px; }
+    label { font-size: 0.9rem; font-weight: 600; color: #606770; display: block; margin-bottom: 5px; }
     input, select {
       width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid #e2e8f0;
-      font-family: inherit;
-      margin-top: 6px;
+      padding: 12px;
+      border: 1px solid #dddfe2;
+      border-radius: 8px;
       font-size: 1rem;
-      outline: none;
-      transition: border-color 0.2s;
+      font-family: inherit;
     }
-    input:focus { border-color: #6366f1; }
     .btn {
       width: 100%;
-      padding: 16px;
-      border-radius: 14px;
+      padding: 14px;
       border: none;
-      background: #6366f1;
-      color: white;
+      border-radius: 8px;
+      background: #1877f2;
+      color: #fff;
+      font-size: 1.1rem;
       font-weight: 700;
-      font-size: 1rem;
       cursor: pointer;
-      transition: all 0.3s;
-      margin-top: 10px;
+      transition: background 0.2s;
     }
-    .btn:hover { background: #4f46e5; transform: translateY(-1px); }
-    .btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
-    #status { margin-top: 15px; font-size: 0.9rem; min-height: 1.2em; }
-    .success { color: #10b981; font-weight: 600; }
-    .error { color: #ef4444; font-weight: 600; }
-    .loading-spinner {
-      display: inline-block;
-      width: 18px; height: 18px;
-      border: 3px solid rgba(255,255,255,.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn:hover { background: #166fe5; }
+    .btn:disabled { background: #e4e6eb; color: #bcc0c4; cursor: not-allowed; }
+    #status { margin-top: 15px; font-weight: 500; font-size: 0.95rem; }
+    .success { color: #42b72a; }
+    .error { color: #f02849; }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h2>ลงทะเบียนนักศึกษา</h2>
-    <video id="video" autoplay muted playsinline></video>
-    
-    <div class="input-group">
-      <label>รหัสนักศึกษา</label>
-      <input type="text" id="studentId" placeholder="เช่น 64XXXXXX">
-    </div>
-
-    <div class="input-group">
-      <label>ชื่อ-นามสกุล</label>
-      <input type="text" id="name" placeholder="ระบุชื่อจริง">
-    </div>
-
-    <div class="input-group">
-      <label>ชั้นปี</label>
-      <select id="year">
-        <option value="1">ชั้นปีที่ 1</option>
-        <option value="2">ชั้นปีที่ 2</option>
-        <option value="3">ชั้นปีที่ 3</option>
-        <option value="4">ชั้นปีที่ 4</option>
-        <option value="อื่นๆ">อื่นๆ</option>
-      </select>
-    </div>
-
-    <button id="btnSave" class="btn" disabled>รอโหลดระบบ AI...</button>
-    <div id="status"></div>
-    
-    <a href="index.html" style="display:inline-block; margin-top:20px; color:#94a3b8; text-decoration:none; font-size:0.9rem;">🏠 กลับหน้าหลัก</a>
+<div class="container">
+  <h2>ลงทะเบียนนักศึกษา</h2>
+  <video id="video" autoplay muted playsinline></video>
+  
+  <div class="form-group">
+    <label>รหัสนักศึกษา</label>
+    <input type="text" id="studentId" placeholder="เช่น 64012345">
   </div>
 
-  <script>
-    const API_URL = localStorage.getItem('gasApiUrl');
-    const video = document.getElementById('video');
-    const btnSave = document.getElementById('btnSave');
-    const status = document.getElementById('status');
+  <div class="form-group">
+    <label>ชื่อ-นามสกุล</label>
+    <input type="text" id="name" placeholder="ระบุชื่อจริง">
+  </div>
 
-    // โหลด Model จาก CDN ที่เสถียร
-    async function loadModels() {
+  <div class="form-group">
+    <label>ชั้นปี</label>
+    <select id="year">
+      <option value="1">ปี 1</option>
+      <option value="2">ปี 2</option>
+      <option value="3">ปี 3</option>
+      <option value="4">ปี 4</option>
+      <option value="อื่นๆ">อื่นๆ</option>
+    </select>
+  </div>
+
+  <button id="btnSave" class="btn" disabled>รอโหลดระบบ AI...</button>
+  <div id="status"></div>
+  
+  <a href="index.html" style="display:block; margin-top:15px; color:#1877f2; text-decoration:none; font-size:0.9rem;">🏠 กลับหน้าหลัก</a>
+</div>
+
+<script>
+  const API_URL = localStorage.getItem('gasApiUrl');
+  const video = document.getElementById('video');
+  const btnSave = document.getElementById('btnSave');
+  const statusDiv = document.getElementById('status');
+
+  // โหลด AI Models
+  async function init() {
+    try {
       const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-      try {
-        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmarks68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        startVideo();
-      } catch (e) {
-        status.innerHTML = '<span class="error">❌ โหลด AI ล้มเหลว กรุณารีเฟรช</span>';
-      }
-    }
-
-    function startVideo() {
-      navigator.mediaDevices.getUserMedia({ video: { width: 640 } })
-        .then(stream => {
-          video.srcObject = stream;
-          btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
-          btnSave.disabled = false;
-        })
-        .catch(err => {
-          status.innerHTML = '<span class="error">❌ ไม่สามารถเปิดกล้องได้</span>';
-        });
-    }
-
-    async function handleRegister() {
-      const studentId = document.getElementById('studentId').value.trim();
-      const name = document.getElementById('name').value.trim();
-      const year = document.getElementById('year').value;
-
-      if (!studentId || !name) return alert('กรุณากรอกรหัสและชื่อให้ครบถ้วน');
-      if (!API_URL) return alert('กรุณาตั้งค่า API URL ที่หน้าแรกก่อน');
-
-      btnSave.disabled = true;
-      btnSave.innerHTML = '<div class="loading-spinner"></div> กำลังประมวลผล...';
-      status.innerText = '⏳ กำลังตรวจจับใบหน้า...';
-
-      // ตรวจจับใบหน้า
-      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmarks68Net.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
       
-      if (!detection) {
-        status.innerHTML = '<span class="error">❌ ไม่พบใบหน้า! กรุณามองที่กล้องตรงๆ</span>';
-        btnSave.disabled = false;
-        btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
-        return;
-      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+      video.srcObject = stream;
+      btnSave.disabled = false;
+      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+    } catch (e) {
+      statusDiv.innerHTML = '<span class="error">❌ เข้าถึงกล้องหรือโหลด AI ไม่ได้</span>';
+    }
+  }
 
-      status.innerText = '☁️ กำลังส่งข้อมูลไปยัง Google Sheets...';
+  btnSave.onclick = async () => {
+    const studentId = document.getElementById('studentId').value.trim();
+    const name = document.getElementById('name').value.trim();
+    const year = document.getElementById('year').value;
 
-      try {
-        const payload = {
+    if (!studentId || !name) return alert('กรุณากรอกข้อมูลให้ครบ');
+    if (!API_URL) return alert('กรุณาตั้งค่า API URL ก่อน');
+
+    btnSave.disabled = true;
+    btnSave.innerText = '⏳ ตรวจจับใบหน้า...';
+    
+    const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+    
+    if (!detection) {
+      statusDiv.innerHTML = '<span class="error">❌ ไม่พบใบหน้า! ลองขยับหน้าให้ชัดเจน</span>';
+      btnSave.disabled = false;
+      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+      return;
+    }
+
+    statusDiv.innerText = '☁️ กำลังส่งข้อมูล...';
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({
           action: 'registerUser',
           studentId: studentId,
           name: name,
           year: year,
           faceDescriptor: Array.from(detection.descriptor)
-        };
-
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          status.innerHTML = `<span class="success">✅ ${result.message}</span>`;
-          document.getElementById('studentId').value = '';
-          document.getElementById('name').value = '';
-        } else {
-          status.innerHTML = `<span class="error">❌ ${result.error || 'เกิดข้อผิดพลาด'}</span>`;
-        }
-      } catch (e) {
-        status.innerHTML = '<span class="error">❌ การเชื่อมต่อล้มเหลว ตรวจสอบ API URL</span>';
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        statusDiv.innerHTML = '<span class="success">✅ บันทึกสำเร็จ!</span>';
+        document.getElementById('studentId').value = '';
+        document.getElementById('name').value = '';
+      } else {
+        statusDiv.innerHTML = `<span class="error">❌ ${result.error}</span>`;
       }
-      
-      btnSave.disabled = false;
-      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+    } catch (e) {
+      statusDiv.innerHTML = '<span class="error">❌ เชื่อมต่อ API ไม่ได้</span>';
     }
 
-    btnSave.addEventListener('click', handleRegister);
-    loadModels();
-  </script>
+    btnSave.disabled = false;
+    btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+  };
+
+  init();
+</script>
 </body>
 </html>
