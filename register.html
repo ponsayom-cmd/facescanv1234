@@ -3,197 +3,329 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ลงทะเบียนนักศึกษาใหม่</title>
+  <title>ลงทะเบียนใบหน้า</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #f8fafc;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
+      color: #e2e8f0;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
+      padding: 28px 16px 60px;
+      position: relative;
     }
+
+    /* Ambient orb */
+    body::before {
+      content: '';
+      position: fixed;
+      width: 400px; height: 400px;
+      background: #6366f1;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.12;
+      top: -80px; left: -80px;
+      pointer-events: none; z-index: 0;
+    }
+
     .container {
       width: 100%;
-      max-width: 500px;
-      background: rgba(30, 41, 59, 0.7);
-      backdrop-filter: blur(10px);
-      padding: 30px;
-      border-radius: 24px;
+      max-width: 520px;
+      position: relative; z-index: 1;
+      animation: fadeIn 0.5s ease;
+    }
+
+    /* Header */
+    .page-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: #64748b; text-decoration: none; font-size: 0.88em;
+      padding: 6px 12px; border-radius: 20px;
+      background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      transition: all 0.25s ease;
+      margin-bottom: 16px;
     }
-    h2 { text-align: center; margin-bottom: 25px; font-weight: 700; color: #60a5fa; }
-    .input-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: white;
-      font-size: 16px;
-      outline: none;
-      transition: border 0.3s;
+    .back-btn:hover { color: #e2e8f0; background: rgba(255,255,255,0.1); }
+
+    h2 {
+      font-size: 1.6em; font-weight: 700;
+      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
     }
-    input:focus { border-color: #3b82f6; }
-    .video-container {
+    .instruction {
+      font-size: 0.83em; color: #64748b; line-height: 1.6;
+    }
+
+    /* Step dots */
+    .step-dots {
+      display: flex; justify-content: center; gap: 10px;
+      margin: 16px 0 20px;
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: all 0.3s ease;
+    }
+    .dot.active {
+      background: #6366f1;
+      box-shadow: 0 0 10px rgba(99,102,241,0.6);
+    }
+
+    /* Status */
+    #status {
+      font-size: 0.88em; color: #64748b;
+      margin-bottom: 14px; min-height: 20px;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(99,102,241,0.3);
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Video */
+    .video-wrapper {
       position: relative;
-      width: 100%;
-      aspect-ratio: 4/3;
-      background: #000;
-      border-radius: 16px;
+      border-radius: 20px;
       overflow: hidden;
-      margin-bottom: 20px;
-      border: 2px solid #334155;
-    }
-    video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { position: absolute; top: 0; left: 0; }
-    .btn-save {
+      border: 2px solid rgba(99,102,241,0.4);
+      box-shadow: 0 0 30px rgba(99,102,241,0.2), inset 0 0 30px rgba(0,0,0,0.3);
+      background: #0a0a1a;
       width: 100%;
-      padding: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    video {
+      width: 100%; display: block;
+      transform: scaleX(-1);
+      border-radius: 18px;
+    }
+
+    /* Form Section */
+    .form-section {
+      margin-top: 22px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 18px;
+      padding: 22px 20px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 12px;
-      border: none;
-      background: #3b82f6;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-family: 'Sarabun', sans-serif;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .input-group input::placeholder { color: #475569; }
+    .input-group input:focus {
+      border-color: rgba(99,102,241,0.6);
+      background: rgba(99,102,241,0.06);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+
+    #btnSave {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
       color: white;
-      font-weight: 700;
+      border: none;
+      border-radius: 50px;
       font-size: 16px;
+      font-weight: 600;
+      font-family: 'Sarabun', sans-serif;
       cursor: pointer;
-      transition: all 0.3s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
     }
-    .btn-save:disabled { background: #475569; cursor: not-allowed; }
-    .status-msg { margin-top: 15px; text-align: center; font-size: 14px; min-height: 20px; }
-    .loading-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
-      justify-content: center; align-items: center; z-index: 100;
+    #btnSave:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99,102,241,0.5);
     }
-    .back-btn { margin-bottom: 20px; color: #94a3b8; text-decoration: none; font-size: 14px; }
+    #btnSave:disabled {
+      background: rgba(255,255,255,0.1);
+      color: #475569;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    .count-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    #btnSave:not(:disabled) .count-badge {
+      background: rgba(255,255,255,0.25);
+    }
+
+    #msg {
+      margin-top: 14px; min-height: 24px;
+      font-size: 0.9em; font-weight: 600;
+      text-align: center;
+    }
+    .msg-success { color: #34d399; }
+    .msg-error   { color: #f87171; }
+
+    /* Animations */
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin   { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-
-  <div id="loadingOverlay" class="loading-overlay">
-    <div style="font-size: 40px;">⏳</div>
-    <p>กำลังโหลด AI Model...</p>
+<div class="container">
+  <div class="page-header">
+    <a href="index.html" class="back-btn">← กลับ</a>
+    <h2>👤 ลงทะเบียนใบหน้า</h2>
+    <p class="instruction">บันทึก 3 มุม: หน้าตรง / หันซ้ายเล็กน้อย / หันขวาเล็กน้อย<br>เพื่อความแม่นยำสูงสุด</p>
   </div>
 
-  <a href="index.html" class="back-btn">← กลับหน้าหลัก</a>
-
-  <div class="container">
-    <h2>ลงทะเบียนนักศึกษา</h2>
-    
-    <div class="input-group">
-      <label>รหัสนักศึกษา</label>
-      <input type="text" id="studentId" placeholder="เช่น 64XXXXXX" autocomplete="off">
-    </div>
-
-    <div class="input-group">
-      <label>ชื่อ-นามสกุล</label>
-      <input type="text" id="studentName" placeholder="ระบุชื่อจริง" autocomplete="off">
-    </div>
-
-    <div class="video-container">
-      <video id="video" autoplay muted playsinline></video>
-    </div>
-
-    <button id="btnSave" class="btn-save" disabled>📸 บันทึกข้อมูลใบหน้า</button>
-    <div id="statusMsg" class="status-msg"></div>
+  <div class="step-dots">
+    <div class="dot" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div>
   </div>
 
-  <script>
-    const video = document.getElementById('video');
-    const btnSave = document.getElementById('btnSave');
-    const statusMsg = document.getElementById('statusMsg');
-    const loadingOverlay = document.getElementById('loadingOverlay');
+  <div id="status">
+    <span class="spinner"></span> กำลังโหลด AI Model...
+  </div>
 
-    async function init() {
-      try {
-        // โหลดโมเดล (ใช้จาก CDN หรือโฟลเดอร์ในโปรเจกต์)
-        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-        ]);
+  <div class="video-wrapper">
+    <video id="video" autoplay muted playsinline></video>
+  </div>
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-        video.srcObject = stream;
-        
-        loadingOverlay.style.display = 'none';
-        btnSave.disabled = false;
-        showStatus('✅ ระบบพร้อมใช้งาน', '#34d399');
-      } catch (err) {
-        showStatus('❌ โหลดระบบไม่สำเร็จ: ' + err.message, '#f87171');
-      }
-    }
+  <div class="form-section">
+    <div class="input-group">
+      <input type="text" id="username" placeholder="ชื่อ-นามสกุลพนักงาน">
+    </div>
 
-    function showStatus(text, color) {
-      statusMsg.innerText = text;
-      statusMsg.style.color = color;
-    }
+    <button id="btnSave" onclick="saveFace()" disabled>
+      📸 บันทึกใบหน้า <span id="saveCount" class="count-badge">0</span>
+    </button>
 
-    btnSave.addEventListener('click', async () => {
-      const studentId = document.getElementById('studentId').value.trim();
-      const name = document.getElementById('studentName').value.trim();
+    <div id="msg"></div>
+  </div>
+</div>
 
-      if (!studentId || !name) {
-        return alert('กรุณากรอกรหัสและชื่อให้ครบถ้วน');
-      }
+<script>
+  const API_URL   = localStorage.getItem('gasApiUrl') || GAS_API_URL;
+  const video     = document.getElementById('video');
+  const statusDiv = document.getElementById('status');
+  const btnSave   = document.getElementById('btnSave');
+  const msgDiv    = document.getElementById('msg');
+  const countSpan = document.getElementById('saveCount');
+  let saveCounter = 0;
 
-      if (!API_URL) {
-        return alert('ยังไม่ได้ตั้งค่า API URL ในหน้าตั้งค่า');
-      }
+  if (!API_URL) {
+    statusDiv.innerHTML = '<span style="color:#f87171">❌ ยังไม่ได้ตั้งค่า API URL — <a href="config.html" style="color:#fbbf24">ไปตั้งค่า</a></span>';
+  } else {
+    window.addEventListener('load', initModels);
+  }
 
-      btnSave.disabled = true;
-      showStatus('⏳ กำลังสแกนใบหน้า...', '#fbbf24');
-
-      const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-
-      if (!detection) {
-        alert('ไม่พบใบหน้าในกล้อง กรุณาขยับหน้าให้อยู่กลางจอ');
-        btnSave.disabled = false;
-        showStatus('❌ ไม่พบใบหน้า', '#f87171');
-        return;
-      }
-
-      showStatus('⏳ กำลังส่งข้อมูลไปยัง Google Sheets...', '#60a5fa');
-
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'registerStudent',
-            studentId: studentId,
-            name: name,
-            faceDescriptor: Array.from(detection.descriptor)
-          })
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          showStatus('✅ ' + result.message, '#34d399');
-          alert('ลงทะเบียนสำเร็จ!');
-          window.location.href = 'index.html';
-        } else {
-          throw new Error(result.error);
-        }
-      } catch (err) {
-        showStatus('❌ ผิดพลาด: ' + err.message, '#f87171');
-        btnSave.disabled = false;
-      }
+  function updateDots() {
+    [1,2,3].forEach(i => {
+      const dot = document.getElementById('dot' + i);
+      dot.className = 'dot' + (i <= saveCounter ? ' active' : '');
     });
+  }
 
-    init();
-  </script>
+  async function initModels() {
+    try {
+      const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+      await Promise.all([
+        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+      startCamera();
+    } catch (e) {
+      statusDiv.innerHTML = '<span style="color:#f87171">❌ โหลด AI Model ล้มเหลว: ' + e.message + '</span>';
+    }
+  }
+
+  function startCamera() {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+      .then(stream => {
+        video.srcObject = stream;
+        statusDiv.innerText = '';
+        btnSave.disabled = false;
+      })
+      .catch(err => {
+        statusDiv.innerHTML = '<span style="color:#f87171">❌ เปิดกล้องไม่ได้: ' + err.message + '</span>';
+      });
+  }
+
+  async function saveFace() {
+    const name = document.getElementById('username').value.trim();
+    if (!name) return alert('กรุณาใส่ชื่อก่อน');
+
+    btnSave.disabled = true;
+    btnSave.innerHTML = '⏳ กำลังประมวลผล... <span class="count-badge">' + saveCounter + '</span>';
+    msgDiv.innerText = '';
+
+    const detection = await faceapi
+      .detectSingleFace(video)
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!detection) {
+      alert('ไม่พบใบหน้า! กรุณามองกล้องให้ชัดเจน');
+      btnSave.disabled = false;
+      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+      return;
+    }
+
+    const descriptorArray = Array.from(detection.descriptor);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'registerUser', name, faceDescriptor: descriptorArray })
+      });
+      const data = await res.json();
+
+      saveCounter++;
+      countSpan.innerText = saveCounter;
+      updateDots();
+      msgDiv.innerHTML = '<span class="msg-success">✅ บันทึกครั้งที่ ' + saveCounter + ' สำเร็จ! ขยับหน้าเล็กน้อยแล้วกดอีกครั้ง</span>';
+      btnSave.disabled = false;
+      btnSave.innerHTML = '📸 บันทึกเพิ่ม <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+    } catch (e) {
+      msgDiv.innerHTML = '<span class="msg-error">❌ บันทึกล้มเหลว: ' + e.message + '</span>';
+      btnSave.disabled = false;
+      btnSave.innerHTML = '📸 บันทึกใบหน้า <span class="count-badge" id="saveCount">' + saveCounter + '</span>';
+    }
+  }
+</script>
 </body>
 </html>
