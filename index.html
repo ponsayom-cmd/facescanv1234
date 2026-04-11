@@ -3,203 +3,269 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ระบบสแกนใบหน้าเข้าชั้นเรียน</title>
+  <title>Smart Attendance System</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="js/api-config.js"></script>
+  
   <style>
+    /* --- Base Styles --- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
-      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0d1b2a 100%);
-      color: #e2e8f0;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #1e293b;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px 20px 60px;
-      position: relative;
-      overflow-x: hidden;
     }
 
-    /* Ambient orbs */
-    body::before, body::after {
-      content: '';
+    /* Ambient Background Elements */
+    .bg-shape {
       position: fixed;
       border-radius: 50%;
       filter: blur(80px);
-      opacity: 0.15;
-      pointer-events: none;
-      z-index: 0;
+      z-index: -1;
+      opacity: 0.5;
     }
-    body::before {
-      width: 400px; height: 400px;
-      background: #6366f1;
-      top: -100px; left: -100px;
-    }
-    body::after {
-      width: 350px; height: 350px;
-      background: #10b981;
-      bottom: -80px; right: -80px;
-    }
+    .shape-1 { width: 300px; height: 300px; background: #dbeafe; top: -100px; right: -50px; }
+    .shape-2 { width: 250px; height: 250px; background: #ede9fe; bottom: -50px; left: -50px; }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 40px;
-      position: relative; z-index: 1;
-      animation: fadeInDown 0.6s ease;
+      animation: fadeInDown 0.8s ease-out;
     }
-    .logo-icon {
-      font-size: 52px;
-      display: block;
-      margin-bottom: 12px;
-      filter: drop-shadow(0 0 20px rgba(99,102,241,0.6));
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
     }
-    h1 {
-      font-size: 1.7em;
-      font-weight: 700;
-      background: linear-gradient(135deg, #a5b4fc, #e2e8f0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      font-size: 0.85em;
+
+    .header p {
       color: #64748b;
-      letter-spacing: 0.03em;
+      font-size: 1rem;
     }
 
-    /* Warning */
-    .api-warning {
-      display: none;
-      background: rgba(245,158,11,0.15);
-      border: 1px solid rgba(245,158,11,0.4);
-      color: #fcd34d;
-      border-radius: 12px;
-      padding: 12px 18px;
-      width: 100%;
-      max-width: 360px;
-      margin-bottom: 20px;
-      font-size: 0.88em;
-      position: relative; z-index: 1;
-      animation: fadeIn 0.5s ease;
-    }
-    .api-warning a { color: #fbbf24; font-weight: 600; text-decoration: none; }
-
-    /* Menu Cards */
-    .menu-cards {
-      width: 100%;
-      max-width: 380px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative; z-index: 1;
-    }
-
-    .btn-menu {
+    /* --- Status Bar --- */
+    .api-status {
+      background: white;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px 22px;
+      gap: 10px;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+    .status-active .status-dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+    /* --- Menu Grid --- */
+    .menu-section {
+      width: 100%;
+      max-width: 800px;
+      margin-bottom: 40px;
+    }
+
+    .section-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      margin-left: 10px;
+      letter-spacing: 1px;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .menu-card {
+      background: white;
+      padding: 24px;
+      border-radius: 24px;
       text-decoration: none;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      color: #e2e8f0;
-      transition: all 0.3s ease;
-      animation: fadeInUp 0.5s ease both;
-    }
-    .btn-menu:nth-child(1) { animation-delay: 0.1s; }
-    .btn-menu:nth-child(2) { animation-delay: 0.2s; }
-    .btn-menu:nth-child(3) { animation-delay: 0.3s; }
-
-    .btn-menu:hover {
-      transform: translateY(-4px);
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(255,255,255,0.25);
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid #f1f5f9;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn-register:hover { box-shadow: 0 8px 30px rgba(99,102,241,0.35); border-color: rgba(99,102,241,0.5); }
-    .btn-scan:hover     { box-shadow: 0 8px 30px rgba(16,185,129,0.35); border-color: rgba(16,185,129,0.5); }
-    .btn-config:hover   { box-shadow: 0 8px 30px rgba(100,116,139,0.25); border-color: rgba(148,163,184,0.4); }
+    .menu-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+      border-color: #6366f1;
+    }
 
     .card-icon {
-      width: 52px; height: 52px;
-      border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 24px;
-      flex-shrink: 0;
+      font-size: 2rem;
+      width: 60px;
+      height: 60px;
+      background: #f8fafc;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
     }
-    .btn-register .card-icon { background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 15px rgba(99,102,241,0.4); }
-    .btn-scan     .card-icon { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16,185,129,0.4); }
-    .btn-config   .card-icon { background: linear-gradient(135deg, #475569, #334155); box-shadow: 0 4px 15px rgba(71,85,105,0.4); }
 
-    .card-text { flex: 1; text-align: left; }
-    .card-title { font-size: 1.05em; font-weight: 600; color: #f1f5f9; margin-bottom: 2px; }
-    .card-desc  { font-size: 0.8em; color: #64748b; }
-
-    .card-arrow {
-      font-size: 18px; color: #475569;
-      transition: transform 0.3s ease, color 0.3s ease;
+    .menu-card:hover .card-icon {
+      background: #eff6ff;
+      transform: scale(1.1) rotate(-5deg);
     }
-    .btn-menu:hover .card-arrow { transform: translateX(4px); color: #94a3b8; }
+
+    .card-info h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .card-info p {
+      font-size: 0.85rem;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    /* Special Styling for Admin Area */
+    .admin-card { background: #f8fafc; border-style: dashed; }
+    .admin-card:hover { background: #ffffff; }
 
     /* Animations */
-    @keyframes fadeIn    { from { opacity: 0; }                      to { opacity: 1; } }
-    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeInUp  { from { opacity: 0; transform: translateY(20px);  } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-up { animation: fadeInUp 0.6s ease-out backwards; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
 
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
   <div class="header">
-    <span class="logo-icon">🏢</span>
-    <h1>ระบบสแกนใบหน้าเข้าชั้นเรียน</h1>
-    <p class="subtitle">Face Recognition &amp; GPS Attendance</p>
+    <h1>ระบบเช็คชื่ออัจฉริยะ</h1>
+    <p>Smart Attendance & Classroom Management</p>
   </div>
 
-  <div id="apiWarning" class="api-warning">
-    ⚠️ ยังไม่ได้ตั้งค่า API —
-    <a href="config.html">ไปตั้งค่าก่อน</a>
+  <div id="statusIndicator" class="api-status">
+    <div class="status-dot"></div>
+    <span id="statusText">กำลังตรวจสอบการเชื่อมต่อ...</span>
   </div>
 
-  <div class="menu-cards">
-    <a href="register.html" class="btn-menu btn-register">
-      <div class="card-icon">👤</div>
-      <div class="card-text">
-        <div class="card-title">ลงทะเบียนนักศึกษา</div>
-        <div class="card-desc">บันทึกข้อมูลใบหน้าใหม่</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+  <!-- หมวดหมู่: สำหรับการใช้งานทั่วไป -->
+  <div class="menu-section animate-up" style="animation-delay: 0.2s;">
+    <div class="section-label">บันทึกข้อมูลและเข้าเรียน</div>
+    <div class="menu-grid">
+      <a href="scan.html" class="menu-card">
+        <div class="card-icon">📸</div>
+        <div class="card-info">
+          <h3>สแกนใบหน้า</h3>
+          <p>เช็คชื่อเข้าชั้นเรียนด้วย AI และตรวจสอบพิกัด GPS</p>
+        </div>
+      </a>
+      
+      <a href="register.html" class="menu-card">
+        <div class="card-icon">👤</div>
+        <div class="card-info">
+          <h3>ลงทะเบียนใหม่</h3>
+          <p>เพิ่มข้อมูลใบหน้าสำหรับนักศึกษาใหม่ในระบบ</p>
+        </div>
+      </a>
+    </div>
+  </div>
 
-    <a href="scan.html" class="btn-menu btn-scan">
-      <div class="card-icon">📷</div>
-      <div class="card-text">
-        <div class="card-title">สแกนใบหน้าเข้าเรียน</div>
-        <div class="card-desc">ยืนยันตัวตนด้วยใบหน้า + GPS</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+  <!-- หมวดหมู่: สำหรับผู้สอนและผู้ดูแล -->
+  <div class="menu-section animate-up" style="animation-delay: 0.4s;">
+    <div class="section-label">การจัดการและสถิติ</div>
+    <div class="menu-grid">
+      <a href="management.html" class="menu-card">
+        <div class="card-icon">🗂️</div>
+        <div class="card-info">
+          <h3>จัดการข้อมูล</h3>
+          <p>แก้ไขรายชื่อนักศึกษา และจัดการรายวิชาทั้งหมด</p>
+        </div>
+      </a>
 
-    <a href="config.html" class="btn-menu btn-config">
-      <div class="card-icon">⚙️</div>
-      <div class="card-text">
-        <div class="card-title">ตั้งค่าระบบ</div>
-        <div class="card-desc">จัดการ GPS และ API (Admin)</div>
-      </div>
-      <span class="card-arrow">›</span>
-    </a>
+      <a href="analytics.html" class="menu-card">
+        <div class="card-icon">📊</div>
+        <div class="card-info">
+          <h3>รายงานสถิติ</h3>
+          <p>ดูภาพรวมการเข้าเรียนในรูปแบบกราฟเชิงวิเคราะห์</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- หมวดหมู่: ตั้งค่าระดับสูง -->
+  <div class="menu-section animate-up" style="animation-delay: 0.6s;">
+    <div class="section-label">ระบบหลังบ้าน</div>
+    <div class="menu-grid">
+      <a href="admin.html" class="menu-card admin-card">
+        <div class="card-icon">⚙️</div>
+        <div class="card-info">
+          <h3>Admin Console</h3>
+          <p>เครื่องมือดูแลระบบ ล้างข้อมูล และความปลอดภัย</p>
+        </div>
+      </a>
+
+      <a href="config.html" class="menu-card admin-card">
+        <div class="card-icon">🌐</div>
+        <div class="card-info">
+          <h3>ตั้งค่า API</h3>
+          <p>ปรับเปลี่ยน URL การเชื่อมต่อ และพิกัดจุดเช็คชื่อ</p>
+        </div>
+      </a>
+    </div>
   </div>
 
   <script>
-    if (!localStorage.getItem('gasApiUrl') && typeof GAS_API_URL === 'undefined') {
-      document.getElementById('apiWarning').style.display = 'block';
-    }
+    // ตรวจสอบสถานะการตั้งค่า API เบื้องต้น
+    window.onload = function() {
+      const apiUrl = localStorage.getItem('gasApiUrl');
+      const statusIndicator = document.getElementById('statusIndicator');
+      const statusText = document.getElementById('statusText');
+
+      if (!apiUrl) {
+        statusText.innerText = '⚠️ ยังไม่ได้ตั้งค่า API URL';
+        statusIndicator.style.borderColor = '#f87171';
+      } else {
+        // ทดสอบเชื่อมต่อแบบรวดเร็ว
+        fetch(apiUrl + '?action=getConfig')
+          .then(res => {
+            if(res.ok) {
+              statusIndicator.classList.add('status-active');
+              statusText.innerText = '● เชื่อมต่อระบบสำเร็จ';
+            }
+          })
+          .catch(err => {
+            statusText.innerText = '❌ เชื่อมต่อ API ไม่ได้';
+            statusIndicator.style.borderColor = '#f87171';
+          });
+      }
+    };
   </script>
 </body>
 </html>
