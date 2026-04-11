@@ -3,342 +3,202 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ลงทะเบียนนักศึกษา - Smart Attendance</title>
+  <title>ลงทะเบียน - Smart Attendance</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <!-- Load Face-API -->
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
-  
   <style>
-    /* --- Base Styles --- */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      background: #f8fafc;
       color: #334155;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 24px 16px 60px;
-      position: relative;
-      overflow-x: hidden;
+      padding: 30px 15px;
     }
-
-    /* Ambient Orbs */
-    body::before, body::after {
-      content: '';
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(100px);
-      opacity: 0.5;
-      pointer-events: none;
-      z-index: 0;
-    }
-    body::before { width: 400px; height: 400px; background: #dbeafe; top: -100px; right: -100px; }
-    body::after { width: 350px; height: 350px; background: #ede9fe; bottom: -80px; left: -80px; }
-
     .container {
-      position: relative;
-      z-index: 1;
       width: 100%;
       max-width: 500px;
-      text-align: center;
-    }
-
-    .top-nav {
-      display: flex;
-      align-items: center;
-      margin-bottom: 24px;
-      width: 100%;
-    }
-
-    .btn-back {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      width: 45px; height: 45px;
-      border-radius: 15px;
-      display: flex; align-items: center; justify-content: center;
-      text-decoration: none; color: #64748b; font-size: 1.2rem;
-      transition: 0.3s;
-    }
-
-    .page-title {
-      flex-grow: 1;
-      font-size: 1.4rem; font-weight: 700; color: #1e293b;
-      margin-right: 45px;
-    }
-
-    /* --- Form Card --- */
-    .form-card {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(16px);
-      border-radius: 30px;
+      background: white;
       padding: 25px;
-      border: 1px solid rgba(255, 255, 255, 0.6);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
-      margin-bottom: 24px;
-      text-align: left;
-    }
-
-    .input-row {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 15px;
-    }
-
-    .input-group { margin-bottom: 20px; }
-
-    .input-group label {
-      display: block; font-size: 0.85rem; font-weight: 700;
-      color: #64748b; margin-bottom: 6px; margin-left: 4px;
-    }
-
-    .input-control {
-      width: 100%;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 14px 18px;
-      font-family: inherit; font-size: 1rem; color: #1e293b;
-      outline: none; transition: 0.3s;
-    }
-
-    .input-control:focus {
-      background: #fff;
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }
-
-    /* --- Camera Area --- */
-    .camera-container {
-      margin-top: 10px;
-      margin-bottom: 20px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
       text-align: center;
     }
-
-    .camera-wrapper {
+    h2 { margin-bottom: 20px; color: #1e293b; font-weight: 700; }
+    #video {
       width: 100%;
-      aspect-ratio: 4/3;
-      background: #f1f5f9;
-      border-radius: 24px;
-      overflow: hidden;
-      position: relative;
-      border: 4px solid #fff;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+      border-radius: 16px;
+      background: #000;
+      transform: scaleX(-1);
+      margin-bottom: 20px;
     }
-
-    video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-
-    .camera-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      pointer-events: none;
-    }
-
-    .face-guide {
-      width: 200px; height: 260px;
-      border: 2px dashed rgba(255,255,255,0.6);
-      border-radius: 50% 50% 40% 40%;
-    }
-
-    /* --- Footer Actions --- */
-    .step-indicator {
-      display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;
-    }
-    .dot {
-      width: 10px; height: 10px; background: #e2e8f0; border-radius: 5px; transition: 0.4s;
-    }
-    .dot.active { width: 30px; background: #6366f1; }
-
-    .btn-submit {
+    .input-group { margin-bottom: 15px; text-align: left; }
+    label { font-size: 0.9rem; font-weight: 600; color: #64748b; margin-left: 4px; }
+    input, select {
       width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      font-family: inherit;
+      margin-top: 6px;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #6366f1; }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
       background: #6366f1;
       color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 18px;
-      font-size: 1.1rem; font-weight: 700;
-      cursor: pointer; transition: 0.3s;
-      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 10px;
     }
-    .btn-submit:hover { background: #4f46e5; transform: translateY(-2px); }
-    .btn-submit:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
-
-    .status-msg {
-      margin-top: 15px; text-align: center; font-size: 0.9rem; min-height: 24px;
+    .btn:hover { background: #4f46e5; transform: translateY(-1px); }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+    #status { margin-top: 15px; font-size: 0.9rem; min-height: 1.2em; }
+    .success { color: #10b981; font-weight: 600; }
+    .error { color: #ef4444; font-weight: 600; }
+    .loading-spinner {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
     }
-
-    /* Animation */
-    .animate-in { animation: fadeInUp 0.7s ease-out forwards; }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <div class="container animate-in">
-    <div class="top-nav">
-      <a href="index.html" class="btn-back">❮</a>
-      <h1 class="page-title">ลงทะเบียนนักศึกษา</h1>
+  <div class="container">
+    <h2>ลงทะเบียนนักศึกษา</h2>
+    <video id="video" autoplay muted playsinline></video>
+    
+    <div class="input-group">
+      <label>รหัสนักศึกษา</label>
+      <input type="text" id="studentId" placeholder="เช่น 64XXXXXX">
     </div>
 
-    <div class="form-card">
-      <!-- ส่วนข้อมูลส่วนตัว -->
-      <div class="input-group">
-        <label for="studentName">ชื่อ-นามสกุล</label>
-        <input type="text" id="studentName" class="input-control" placeholder="ระบุชื่อจริง-นามสกุล..." autocomplete="off">
-      </div>
-
-      <div class="input-row">
-        <div class="input-group">
-          <label for="studentID">รหัสนักศึกษา</label>
-          <input type="text" id="studentID" class="input-control" placeholder="เช่น 64XXXXXX" maxlength="15">
-        </div>
-        <div class="input-group">
-          <label for="studentYear">ชั้นปี</label>
-          <select id="studentYear" class="input-control">
-            <option value="1">ปี 1</option>
-            <option value="2">ปี 2</option>
-            <option value="3">ปี 3</option>
-            <option value="4">ปี 4</option>
-            <option value="อื่นๆ">อื่นๆ</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- ส่วนกล้อง -->
-      <div class="camera-container">
-        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #64748b; margin-bottom: 10px; text-align: left; margin-left: 4px;">
-          สแกนใบหน้าต้นแบบ (แนะนำ 3 ครั้ง)
-        </label>
-        <div class="camera-wrapper">
-          <video id="video" autoplay muted playsinline></video>
-          <div class="camera-overlay">
-            <div class="face-guide"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ขั้นตอนการเก็บใบหน้า -->
-      <div class="step-indicator">
-        <div id="dot1" class="dot"></div>
-        <div id="dot2" class="dot"></div>
-        <div id="dot3" class="dot"></div>
-      </div>
-
-      <button id="btnSave" class="btn-submit">
-        <span>📸 บันทึกข้อมูลใบหน้า</span>
-      </button>
-
-      <div id="msgDiv" class="status-msg"></div>
+    <div class="input-group">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="name" placeholder="ระบุชื่อจริง">
     </div>
 
-    <p style="font-size: 0.8rem; color: #94a3b8; text-align: center;">
-      กรุณาถอดแว่นดำหรือหน้ากากอนามัยขณะลงทะเบียนเพื่อความแม่นยำ
-    </p>
+    <div class="input-group">
+      <label>ชั้นปี</label>
+      <select id="year">
+        <option value="1">ชั้นปีที่ 1</option>
+        <option value="2">ชั้นปีที่ 2</option>
+        <option value="3">ชั้นปีที่ 3</option>
+        <option value="4">ชั้นปีที่ 4</option>
+        <option value="อื่นๆ">อื่นๆ</option>
+      </select>
+    </div>
+
+    <button id="btnSave" class="btn" disabled>รอโหลดระบบ AI...</button>
+    <div id="status"></div>
+    
+    <a href="index.html" style="display:inline-block; margin-top:20px; color:#94a3b8; text-decoration:none; font-size:0.9rem;">🏠 กลับหน้าหลัก</a>
   </div>
 
   <script>
-    // ดึงค่า Config จาก LocalStorage
     const API_URL = localStorage.getItem('gasApiUrl');
     const video = document.getElementById('video');
     const btnSave = document.getElementById('btnSave');
-    const msgDiv = document.getElementById('msgDiv');
-    let saveCount = 0;
+    const status = document.getElementById('status');
 
-    // เริ่มกล้อง
-    async function initCamera() {
+    // โหลด Model จาก CDN ที่เสถียร
+    async function loadModels() {
+      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        video.srcObject = stream;
-        
-        // โหลด Model ของ Face-API (ใช้ CDN)
-        msgDiv.innerText = '⏳ กำลังโหลด AI Models...';
-        await Promise.all([
-          faceapi.nets.ssdMobilenetv1.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
-          faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
-          faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model')
-        ]);
-        msgDiv.innerText = '✅ ระบบพร้อมลงทะเบียน';
-      } catch (err) {
-        msgDiv.innerHTML = '<span style="color:red">❌ กล้องขัดข้อง: ' + err.message + '</span>';
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmarks68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        startVideo();
+      } catch (e) {
+        status.innerHTML = '<span class="error">❌ โหลด AI ล้มเหลว กรุณารีเฟรช</span>';
       }
     }
 
-    // ฟังก์ชันบันทึก
-    btnSave.addEventListener('click', async () => {
-      const name = document.getElementById('studentName').value.trim();
-      const id = document.getElementById('studentID').value.trim();
-      const year = document.getElementById('studentYear').value;
+    function startVideo() {
+      navigator.mediaDevices.getUserMedia({ video: { width: 640 } })
+        .then(stream => {
+          video.srcObject = stream;
+          btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+          btnSave.disabled = false;
+        })
+        .catch(err => {
+          status.innerHTML = '<span class="error">❌ ไม่สามารถเปิดกล้องได้</span>';
+        });
+    }
 
-      if (!name || !id) {
-        msgDiv.innerHTML = '<span style="color:#ef4444">⚠️ กรุณากรอกชื่อและรหัสนักศึกษา</span>';
-        return;
-      }
+    async function handleRegister() {
+      const studentId = document.getElementById('studentId').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const year = document.getElementById('year').value;
 
-      if (!API_URL) {
-        msgDiv.innerHTML = '<span style="color:#ef4444">⚠️ ไม่พบ API URL กรุณาตั้งค่าก่อน</span>';
-        return;
-      }
+      if (!studentId || !name) return alert('กรุณากรอกรหัสและชื่อให้ครบถ้วน');
+      if (!API_URL) return alert('กรุณาตั้งค่า API URL ที่หน้าแรกก่อน');
 
       btnSave.disabled = true;
-      btnSave.innerText = '⏳ กำลังประมวลผลใบหน้า...';
+      btnSave.innerHTML = '<div class="loading-spinner"></div> กำลังประมวลผล...';
+      status.innerText = '⏳ กำลังตรวจจับใบหน้า...';
 
       // ตรวจจับใบหน้า
       const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-
+      
       if (!detection) {
-        msgDiv.innerHTML = '<span style="color:#ef4444">❌ ไม่พบใบหน้า! กรุณามองที่กล้อง</span>';
+        status.innerHTML = '<span class="error">❌ ไม่พบใบหน้า! กรุณามองที่กล้องตรงๆ</span>';
         btnSave.disabled = false;
         btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
         return;
       }
 
-      // เตรียมข้อมูล (รวม ชื่อ + รหัส + ปี เป็นสตริงชื่อเพื่อความง่ายในระบบเดิม หรือจะแก้ GAS ก็ได้)
-      // ในที่นี้จะใช้รูปแบบ: "สมชาย ใจดี (640001) - ปี 1"
-      const fullName = `${name} (${id}) - ปี ${year}`;
-      const descriptorArray = Array.from(detection.descriptor);
+      status.innerText = '☁️ กำลังส่งข้อมูลไปยัง Google Sheets...';
 
       try {
+        const payload = {
+          action: 'registerUser',
+          studentId: studentId,
+          name: name,
+          year: year,
+          faceDescriptor: Array.from(detection.descriptor)
+        };
+
         const response = await fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({
-            action: 'registerUser',
-            name: fullName,
-            faceDescriptor: descriptorArray
-          })
+          body: JSON.stringify(payload)
         });
+        
         const result = await response.json();
-
+        
         if (result.success) {
-          saveCount++;
-          if (saveCount <= 3) {
-            document.getElementById('dot' + saveCount).classList.add('active');
-          }
-          
-          msgDiv.innerHTML = `<span style="color:#10b981">✅ บันทึกรอบที่ ${saveCount} สำเร็จ!</span>`;
-          
-          if (saveCount >= 3) {
-            btnSave.innerText = '🎉 ลงทะเบียนสำเร็จแล้ว';
-            btnSave.style.background = '#10b981';
-          } else {
-            btnSave.disabled = false;
-            btnSave.innerText = '📸 บันทึกเพิ่ม (รอบถัดไป)';
-          }
+          status.innerHTML = `<span class="success">✅ ${result.message}</span>`;
+          document.getElementById('studentId').value = '';
+          document.getElementById('name').value = '';
+        } else {
+          status.innerHTML = `<span class="error">❌ ${result.error || 'เกิดข้อผิดพลาด'}</span>`;
         }
-      } catch (error) {
-        msgDiv.innerHTML = '<span style="color:#ef4444">❌ เกิดข้อผิดพลาดในการเชื่อมต่อ</span>';
-        btnSave.disabled = false;
-        btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+      } catch (e) {
+        status.innerHTML = '<span class="error">❌ การเชื่อมต่อล้มเหลว ตรวจสอบ API URL</span>';
       }
-    });
+      
+      btnSave.disabled = false;
+      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
+    }
 
-    window.onload = initCamera;
+    btnSave.addEventListener('click', handleRegister);
+    loadModels();
   </script>
 </body>
 </html>
