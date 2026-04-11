@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ลงทะเบียนนักเรียนใหม่</title>
+  <title>ลงทะเบียนนักศึกษาใหม่</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
@@ -13,132 +13,187 @@
       font-family: 'Sarabun', sans-serif;
       min-height: 100vh;
       background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-      color: #f1f5f9;
+      color: #f8fafc;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px 15px;
+      padding: 20px;
     }
     .container {
-      max-width: 500px;
       width: 100%;
-      background: rgba(30, 41, 59, 0.8);
+      max-width: 500px;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
       padding: 30px;
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      text-align: center;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
     }
-    h1 { margin-bottom: 20px; color: #38bdf8; }
+    h2 { text-align: center; margin-bottom: 25px; font-weight: 700; color: #60a5fa; }
+    .input-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 8px; font-size: 14px; color: #94a3b8; }
     input {
       width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #475569;
-      background: #0f172a;
-      color: #fff;
-      margin-bottom: 20px;
-      font-size: 1rem;
-    }
-    video {
-      width: 100%;
+      padding: 14px;
       border-radius: 12px;
-      background: #000;
-      margin-bottom: 20px;
-      transform: scaleX(-1);
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+      font-size: 16px;
+      outline: none;
+      transition: border 0.3s;
     }
-    .btn {
-      background: #38bdf8;
-      color: #0f172a;
-      border: none;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-weight: bold;
-      cursor: pointer;
+    input:focus { border-color: #3b82f6; }
+    .video-container {
+      position: relative;
       width: 100%;
-      font-size: 1.1rem;
-      transition: 0.3s;
+      aspect-ratio: 4/3;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 2px solid #334155;
     }
-    .btn:disabled { background: #64748b; cursor: not-allowed; }
-    .status { margin-top: 15px; font-size: 0.9rem; }
-    .nav-link { margin-top: 20px; display: block; color: #94a3b8; text-decoration: none; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { position: absolute; top: 0; left: 0; }
+    .btn-save {
+      width: 100%;
+      padding: 16px;
+      border-radius: 12px;
+      border: none;
+      background: #3b82f6;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-save:disabled { background: #475569; cursor: not-allowed; }
+    .status-msg { margin-top: 15px; text-align: center; font-size: 14px; min-height: 20px; }
+    .loading-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+      justify-content: center; align-items: center; z-index: 100;
+    }
+    .back-btn { margin-bottom: 20px; color: #94a3b8; text-decoration: none; font-size: 14px; }
   </style>
 </head>
 <body>
 
+  <div id="loadingOverlay" class="loading-overlay">
+    <div style="font-size: 40px;">⏳</div>
+    <p>กำลังโหลด AI Model...</p>
+  </div>
+
+  <a href="index.html" class="back-btn">← กลับหน้าหลัก</a>
+
   <div class="container">
-    <h1>📝 ลงทะเบียนนักเรียน</h1>
-    <input type="text" id="studentName" placeholder="กรอกชื่อ-นามสกุล นักเรียน">
+    <h2>ลงทะเบียนนักศึกษา</h2>
     
-    <video id="video" autoplay muted playsinline></video>
-    
-    <button id="btnSave" class="btn">📸 บันทึกใบหน้า (0/3)</button>
-    <div id="msg" class="status">รอโหลด AI...</div>
-    
-    <a href="index.html" class="nav-link">กลับหน้าหลัก</a>
+    <div class="input-group">
+      <label>รหัสนักศึกษา</label>
+      <input type="text" id="studentId" placeholder="เช่น 64XXXXXX" autocomplete="off">
+    </div>
+
+    <div class="input-group">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="studentName" placeholder="ระบุชื่อจริง" autocomplete="off">
+    </div>
+
+    <div class="video-container">
+      <video id="video" autoplay muted playsinline></video>
+    </div>
+
+    <button id="btnSave" class="btn-save" disabled>📸 บันทึกข้อมูลใบหน้า</button>
+    <div id="statusMsg" class="status-msg"></div>
   </div>
 
   <script>
     const video = document.getElementById('video');
     const btnSave = document.getElementById('btnSave');
-    const msg = document.getElementById('msg');
-    let saveCount = 0;
+    const statusMsg = document.getElementById('statusMsg');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     async function init() {
       try {
-        await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-        await faceapi.nets.faceLandmarks68Net.loadFromUri('/models');
-        await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-        
+        // โหลดโมเดล (ใช้จาก CDN หรือโฟลเดอร์ในโปรเจกต์)
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        ]);
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
         video.srcObject = stream;
-        msg.innerText = '✅ ระบบพร้อมใช้งาน';
+        
+        loadingOverlay.style.display = 'none';
+        btnSave.disabled = false;
+        showStatus('✅ ระบบพร้อมใช้งาน', '#34d399');
       } catch (err) {
-        msg.innerText = '❌ ผิดพลาด: ' + err.message;
+        showStatus('❌ โหลดระบบไม่สำเร็จ: ' + err.message, '#f87171');
       }
     }
 
-    btnSave.onclick = async () => {
+    function showStatus(text, color) {
+      statusMsg.innerText = text;
+      statusMsg.style.color = color;
+    }
+
+    btnSave.addEventListener('click', async () => {
+      const studentId = document.getElementById('studentId').value.trim();
       const name = document.getElementById('studentName').value.trim();
-      if (!name) return alert('กรุณาระบุชื่อนักเรียน');
+
+      if (!studentId || !name) {
+        return alert('กรุณากรอกรหัสและชื่อให้ครบถ้วน');
+      }
+
+      if (!API_URL) {
+        return alert('ยังไม่ได้ตั้งค่า API URL ในหน้าตั้งค่า');
+      }
 
       btnSave.disabled = true;
-      msg.innerText = '⏳ กำลังประมวลผลใบหน้า...';
+      showStatus('⏳ กำลังสแกนใบหน้า...', '#fbbf24');
 
-      const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-      
+      const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
       if (!detection) {
-        alert('ไม่พบใบหน้า กรุณามองที่กล้อง');
+        alert('ไม่พบใบหน้าในกล้อง กรุณาขยับหน้าให้อยู่กลางจอ');
         btnSave.disabled = false;
+        showStatus('❌ ไม่พบใบหน้า', '#f87171');
         return;
       }
+
+      showStatus('⏳ กำลังส่งข้อมูลไปยัง Google Sheets...', '#60a5fa');
 
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({
-            action: 'registerUser',
+            action: 'registerStudent',
+            studentId: studentId,
             name: name,
             faceDescriptor: Array.from(detection.descriptor)
           })
         });
-        const result = await response.json();
-        
-        saveCount++;
-        btnSave.innerText = `📸 บันทึกเพิ่ม (${saveCount}/3)`;
-        msg.innerText = '✅ บันทึกสำเร็จ! ขยับหน้าเล็กน้อยแล้วบันทึกอีกครั้ง';
-        
-        if (saveCount >= 3) {
-           alert('ลงทะเบียนสมบูรณ์');
-           window.location.href = 'index.html';
-        }
-      } catch (e) {
-        msg.innerText = '❌ ส่งข้อมูลไม่สำเร็จ: ' + e.message;
-      }
-      btnSave.disabled = false;
-    };
 
-    window.onload = init;
+        const result = await response.json();
+        if (result.success) {
+          showStatus('✅ ' + result.message, '#34d399');
+          alert('ลงทะเบียนสำเร็จ!');
+          window.location.href = 'index.html';
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (err) {
+        showStatus('❌ ผิดพลาด: ' + err.message, '#f87171');
+        btnSave.disabled = false;
+      }
+    });
+
+    init();
   </script>
 </body>
 </html>
