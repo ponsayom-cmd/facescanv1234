@@ -3,16 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>สแกนเข้าเรียน - University Smart Attendance</title>
+  <title>สแกนเข้าเรียน - เลือกวิชา</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
-    :root {
-      --primary: #4f46e5;
-      --success: #10b981;
-      --error: #ef4444;
-      --bg: #0f172a;
-    }
+    :root { --primary: #4f46e5; --success: #10b981; --bg: #0f172a; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Sarabun', sans-serif;
@@ -25,128 +20,82 @@
       padding: 20px;
     }
 
-    .header-info {
-      text-align: center;
-      margin-bottom: 20px;
+    .selector-card {
       background: rgba(255,255,255,0.05);
-      padding: 15px 30px;
-      border-radius: 15px;
+      padding: 20px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
       border: 1px solid rgba(255,255,255,0.1);
     }
-    .header-info h2 { font-size: 1.2rem; color: #818cf8; }
-    .header-info p { font-size: 0.9rem; opacity: 0.8; }
+
+    label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #818cf8; }
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      background: #1e293b;
+      color: white;
+      border: 1px solid #334155;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
 
     #videoContainer {
       position: relative;
       width: 100%;
-      max-width: 400px;
+      max-width: 350px;
       aspect-ratio: 1/1;
       background: #000;
       border-radius: 50%;
       overflow: hidden;
       border: 4px solid var(--primary);
-      box-shadow: 0 0 30px rgba(79, 70, 229, 0.3);
+      display: none; /* ซ่อนไว้ก่อนเลือกวิชา */
     }
     video { width: 100%; height: 100%; object-fit: cover; }
-    
-    .scan-overlay {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 5;
-    }
 
     .btn-start {
+      width: 100%;
       background: var(--primary);
       color: white;
       border: none;
-      padding: 15px 40px;
-      border-radius: 30px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .btn-start:hover { transform: scale(1.05); filter: brightness(1.1); }
-
-    #statusText {
-      margin-top: 20px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    /* Modal Styling */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .modal-content {
-      background: white;
-      color: #1e293b;
-      padding: 30px;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-    }
-    .modal-content h3 { margin-bottom: 15px; color: var(--primary); }
-    .confirm-box {
-      background: #f1f5f9;
       padding: 15px;
       border-radius: 12px;
-      margin-bottom: 20px;
-      text-align: left;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
     }
-    .confirm-item { margin-bottom: 5px; font-size: 0.95rem; }
-    .confirm-label { font-weight: 700; color: #64748b; }
-    
-    .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-confirm { background: var(--success); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-    .btn-cancel { background: #94a3b8; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: white; color: #1e293b; padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; }
+    .btn-confirm { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="header-info">
-    <p>วิชาที่กำลังเปิดเช็คชื่อ:</p>
-    <h2 id="displaySubject">⏳ กำลังโหลดข้อมูล...</h2>
-    <p id="displayRoom">ห้อง: -</p>
+  <div class="selector-card" id="setupSection">
+    <h2 style="margin-bottom: 15px; font-size: 1.25rem;">📝 เลือกรายวิชา</h2>
+    <label for="subjectSelect">วิชาที่เข้าเรียนวันนี้:</label>
+    <select id="subjectSelect">
+      <option value="">กำลังโหลดรายชื่อวิชา...</option>
+    </select>
+    <button class="btn-start" id="startBtn" onclick="prepareScanner()">เปิดกล้องสแกนใบหน้า</button>
   </div>
 
   <div id="videoContainer">
     <video id="video" autoplay muted playsinline></video>
-    <div id="overlay" class="scan-overlay">
-      <button class="btn-start" onclick="startScanning()">เริ่มสแกนใบหน้า</button>
-    </div>
   </div>
 
-  <div id="statusText">กรุณากดปุ่มเพื่อเริ่มสแกน</div>
+  <div id="statusText" style="margin-top: 15px; font-weight: 600;"></div>
 
-  <!-- Modal ยืนยันข้อมูล -->
+  <!-- Modal -->
   <div id="confirmModal" class="modal">
     <div class="modal-content">
-      <h3>ยืนยันการเช็คชื่อ</h3>
-      <div class="confirm-box">
-        <div class="confirm-item"><span class="confirm-label">นักศึกษา:</span> <span id="matchName">-</span></div>
-        <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
-        <div class="confirm-item"><span class="confirm-label">วิชา:</span> <span id="confirmSubject">-</span></div>
-        <div class="confirm-item"><span class="confirm-label">ห้องเรียน:</span> <span id="confirmRoom">-</span></div>
-        <div class="confirm-item"><span class="confirm-label">สถานะ:</span> <span id="confirmStatus">-</span></div>
-      </div>
-      <div class="btn-group">
-        <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
-        <button class="btn-confirm" id="finalBtn" onclick="submitAttendance()">ยืนยัน</button>
-      </div>
+      <h3 style="color: var(--primary);">✅ ยืนยันตัวตนสำเร็จ</h3>
+      <div id="confirmDetails" style="text-align: left; margin: 20px 0; line-height: 1.8;"></div>
+      <button class="btn-confirm" id="finalBtn" onclick="submitAttendance()">ยืนยันบันทึกเวลาเรียน</button>
     </div>
   </div>
 
@@ -154,110 +103,110 @@
     const API_URL = localStorage.getItem('gasApiUrl');
     const video = document.getElementById('video');
     const statusText = document.getElementById('statusText');
-    const overlay = document.getElementById('overlay');
-    const modal = document.getElementById('confirmModal');
+    const subjectSelect = document.getElementById('subjectSelect');
     
     let faceMatcher = null;
-    let currentConfig = { subject: '', room: '', lateTime: '' };
+    let subjects = [];
+    let selectedSubject = null;
     let identifiedName = "";
-    let isLate = false;
 
     async function init() {
       if (!API_URL) {
-        statusText.innerText = "❌ กรุณาตั้งค่า API URL ก่อนใช้งาน";
-        statusText.style.color = "red";
+        statusText.innerText = "❌ กรุณาตั้งค่า API URL";
         return;
       }
 
       try {
-        // 1. โหลด AI Models
+        // โหลดวิชา
+        const subRes = await fetch(API_URL + "?action=getSubjects");
+        const subData = await subRes.json();
+        subjects = subData.subjects;
+        
+        subjectSelect.innerHTML = subjects.map((s, index) => 
+          `<option value="${index}">${s.id} - ${s.name}</option>`
+        ).join('');
+
+        // โหลดใบหน้า
+        const faceRes = await fetch(API_URL + "?action=getKnownFaces");
+        const faceData = await faceRes.json();
+        if (faceData.faces.length > 0) {
+          const labeled = faceData.faces.map(f => new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d))));
+          faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
+        }
+
+        // โหลด AI Models
         await Promise.all([
           faceapi.nets.ssdMobilenetv1.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
           faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
           faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model')
         ]);
 
-        // 2. ดึง Config วิชา และ ข้อมูลใบหน้า
-        const [configRes, facesRes] = await Promise.all([
-          fetch(API_URL + "?action=getConfig"),
-          fetch(API_URL + "?action=getKnownFaces")
-        ]);
-
-        currentConfig = await configRes.json();
-        const facesData = await facesRes.json();
-
-        // แสดงผลวิชาที่ดึงมาได้
-        document.getElementById('displaySubject').innerText = currentConfig.subject;
-        document.getElementById('displayRoom').innerText = "ห้อง: " + currentConfig.room;
-
-        // เตรียม Face Matcher
-        if (facesData.faces && facesData.faces.length > 0) {
-          const labeled = facesData.faces.map(f => 
-            new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d)))
-          );
-          faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
-        }
-
         statusText.innerText = "✅ ระบบพร้อมใช้งาน";
       } catch (e) {
-        statusText.innerText = "❌ โหลดข้อมูลล้มเหลว: " + e.message;
+        statusText.innerText = "❌ เกิดข้อผิดพลาดในการโหลดข้อมูล";
       }
     }
 
-    async function startScanning() {
-      overlay.style.display = "none";
-      statusText.innerText = "🔍 กำลังค้นหาใบหน้า...";
-      
+    async function prepareScanner() {
+      const idx = subjectSelect.value;
+      if (idx === "") return alert("กรุณาเลือกวิชา");
+      selectedSubject = subjects[idx];
+
+      document.getElementById('setupSection').style.display = "none";
+      document.getElementById('videoContainer').style.display = "block";
+      statusText.innerText = "🔍 กำลังสแกนใบหน้า...";
+
       const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
       video.srcObject = stream;
 
-      const scanLoop = setInterval(async () => {
-        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-        
-        if (detection && faceMatcher) {
-          const match = faceMatcher.findBestMatch(detection.descriptor);
+      const loop = setInterval(async () => {
+        const detect = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+        if (detect && faceMatcher) {
+          const match = faceMatcher.findBestMatch(detect.descriptor);
           if (match.label !== 'unknown') {
-            clearInterval(scanLoop);
-            showConfirmation(match.label);
+            clearInterval(loop);
+            showModal(match.label);
           }
         }
       }, 1000);
     }
 
-    function showConfirmation(name) {
+    function showModal(name) {
       identifiedName = name;
       
-      // คำนวณสาย/ปกติ
       const now = new Date();
-      const [lHour, lMin] = currentConfig.lateTime.split(':');
-      const lateLimit = new Date();
-      lateLimit.setHours(lHour, lMin, 0);
-      isLate = now > lateLimit;
+      const [h, m] = selectedSubject.lateTime.split(':');
+      const limit = new Date(); limit.setHours(h, m, 0);
+      const isLate = now > limit;
 
-      document.getElementById('matchName').innerText = name;
-      document.getElementById('confirmSubject').innerText = currentConfig.subject;
-      document.getElementById('confirmRoom').innerText = currentConfig.room;
-      document.getElementById('confirmStatus').innerText = isLate ? "สาย (Late)" : "ปกติ (On-time)";
-      document.getElementById('confirmStatus').style.color = isLate ? "red" : "green";
-
-      modal.style.display = "flex";
-      video.srcObject.getTracks().forEach(track => track.stop());
+      document.getElementById('confirmDetails').innerHTML = `
+        <b>ชื่อ-รหัส:</b> ${name}<br>
+        <b>วิชา:</b> ${selectedSubject.name}<br>
+        <b>ห้อง:</b> ${selectedSubject.room}<br>
+        <b>สถานะ:</b> <span style="color:${isLate?'red':'green'}">${isLate?'สาย':'ปกติ'}</span>
+      `;
+      document.getElementById('confirmModal').style.display = "flex";
+      video.srcObject.getTracks().forEach(t => t.stop());
     }
 
     async function submitAttendance() {
       const btn = document.getElementById('finalBtn');
       btn.disabled = true;
-      btn.innerText = "กำลังบันทึก...";
+      btn.innerText = "⌛ กำลังบันทึก...";
 
       try {
+        const now = new Date();
+        const [h, m] = selectedSubject.lateTime.split(':');
+        const limit = new Date(); limit.setHours(h, m, 0);
+
         const res = await fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({
             action: 'logAttendance',
             name: identifiedName,
-            subject: currentConfig.subject,
-            room: currentConfig.room,
-            isLate: isLate
+            subject: selectedSubject.name,
+            room: selectedSubject.room,
+            isLate: now > limit
           })
         });
         const result = await res.json();
@@ -266,14 +215,7 @@
       } catch (e) {
         alert("❌ บันทึกล้มเหลว");
         btn.disabled = false;
-        btn.innerText = "ยืนยัน";
       }
-    }
-
-    function closeModal() {
-      modal.style.display = "none";
-      overlay.style.display = "flex";
-      statusText.innerText = "กรุณากดปุ่มเพื่อเริ่มสแกนใหม่";
     }
 
     init();
