@@ -3,63 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Smart Attendance System</title>
+  <title>ระบบเช็คชื่อเข้าชั้นเรียน</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #34d399; --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); }
+    /* CSS หลักสำหรับหน้า Dashboard */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #f1f5f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
     .header { text-align: center; margin-bottom: 40px; }
-    .header h1 { color: var(--primary); font-size: 2rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 900px; }
-    .card { background: var(--card); padding: 25px; border-radius: 20px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; display: flex; align-items: center; }
-    .card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(52, 211, 153, 0.1); }
-    .icon { font-size: 2.5rem; margin-right: 20px; }
-    .title { font-weight: 700; font-size: 1.1rem; }
-    .desc { font-size: 0.85rem; color: #94a3b8; }
-    .api-status { margin-top: 20px; padding: 10px 20px; border-radius: 30px; font-size: 0.8rem; background: rgba(0,0,0,0.3); }
+    .header h1 { font-size: 2rem; color: #38bdf8; margin-bottom: 8px; }
+    .header p { color: #94a3b8; }
+    
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .menu-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .menu-card:hover {
+      background: rgba(56, 189, 248, 0.1);
+      transform: translateY(-5px);
+      border-color: #38bdf8;
+    }
+    .icon { font-size: 2.5rem; }
+    .title { font-size: 1.25rem; font-weight: 600; color: #fff; }
+    .desc { font-size: 0.9rem; color: #94a3b8; margin-top: 4px; }
+    
+    .warning {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid #f59e0b;
+      color: #fbbf24;
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
 
   <div class="header">
-    <h1>ระบบจัดการนักศึกษา</h1>
-    <p>Face Recognition & Attendance Management</p>
+    <div style="font-size: 3rem; margin-bottom: 10px;">🎓</div>
+    <h1>ระบบเช็คชื่อเข้าชั้นเรียน</h1>
+    <p>Smart Classroom Attendance System</p>
   </div>
 
-  <div class="grid">
-    <a href="register.html" class="card">
-      <div class="icon">👤</div>
-      <div><div class="title">ลงทะเบียนนักศึกษา</div><div class="desc">เพิ่มข้อมูลใบหน้าและประวัติ</div></div>
+  <div id="setupNotice" class="warning" style="display:none;">
+    ⚠️ ตรวจพบว่ายังไม่ได้ตั้งค่า API หรือพิกัดห้องเรียน <a href="config.html" style="color: #fbbf24;">คลิกที่นี่เพื่อตั้งค่า</a>
+  </div>
+
+  <div class="menu-grid">
+    <!-- ลงทะเบียนนักเรียน -->
+    <a href="register.html" class="menu-card">
+      <div class="icon">📝</div>
+      <div>
+        <div class="title">ลงทะเบียนนักเรียน</div>
+        <div class="desc">บันทึกใบหน้าและข้อมูลนักเรียนใหม่</div>
+      </div>
     </a>
-    <a href="scan.html" class="card">
-      <div class="icon">📷</div>
-      <div><div class="title">เช็คชื่อรายวิชา</div><div class="desc">สแกนใบหน้าเข้าเรียน</div></div>
+
+    <!-- เช็คชื่อเข้าเรียน -->
+    <a href="scan.html" class="menu-card">
+      <div class="icon">📸</div>
+      <div>
+        <div class="title">เช็คชื่อเข้าเรียน</div>
+        <div class="desc">สแกนใบหน้าเพื่อบันทึกการเข้าเรียน</div>
+      </div>
     </a>
-    <a href="manage.html" class="card">
-      <div class="icon">📚</div>
-      <div><div class="title">จัดการรายวิชา/นักศึกษา</div><div class="desc">เพิ่มวิชา ลบรายชื่อ</div></div>
-    </a>
-    <a href="report.html" class="card">
-      <div class="icon">📊</div>
-      <div><div class="title">สถิติและรายงาน</div><div class="desc">ดูประวัติการเข้าเรียน</div></div>
-    </a>
-    <a href="config.html" class="card">
+
+    <!-- ตั้งค่าห้องเรียน -->
+    <a href="config.html" class="menu-card">
       <div class="icon">⚙️</div>
-      <div><div class="title">ตั้งค่าระบบ</div><div class="desc">ตั้งค่า API และ GPS พิกัด</div></div>
+      <div>
+        <div class="title">ตั้งค่าห้องเรียน</div>
+        <div class="desc">กำหนดพิกัด GPS และเชื่อมต่อระบบ</div>
+      </div>
     </a>
   </div>
-
-  <div id="status" class="api-status">กำลังตรวจสอบการเชื่อมต่อ...</div>
 
   <script>
-    const API_URL = localStorage.getItem('gasApiUrl');
-    const statusEl = document.getElementById('status');
-    if (!API_URL) {
-      statusEl.innerHTML = '❌ ยังไม่ได้ผูกบัญชี API <a href="config.html" style="color:var(--primary)">คลิกเพื่อตั้งค่า</a>';
-    } else {
-      statusEl.innerHTML = '✅ เชื่อมต่อ API เรียบร้อย';
-    }
+    // ตรวจสอบเบื้องต้นว่ามีการตั้งค่าหรือยัง
+    window.onload = () => {
+      const apiUrl = localStorage.getItem('gasApiUrl');
+      if (!apiUrl) {
+        document.getElementById('setupNotice').style.display = 'block';
+      }
+    };
   </script>
 </body>
 </html>
