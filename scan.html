@@ -3,209 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>สแกนเข้าเรียน - เลือกวิชา</title>
+  <title>สแกนเข้าเรียน - เลือกวิชาจากชีต</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
     :root { --primary: #4f46e5; --success: #10b981; --bg: #0f172a; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background-color: var(--bg);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .selector-card {
-      background: rgba(255,255,255,0.05);
-      padding: 20px;
-      border-radius: 20px;
-      width: 100%;
-      max-width: 400px;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #818cf8; }
-    select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      background: #1e293b;
-      color: white;
-      border: 1px solid #334155;
-      font-size: 1rem;
-      margin-bottom: 10px;
-    }
-
-    #videoContainer {
-      position: relative;
-      width: 100%;
-      max-width: 350px;
-      aspect-ratio: 1/1;
-      background: #000;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 4px solid var(--primary);
-      display: none; /* ซ่อนไว้ก่อนเลือกวิชา */
-    }
+    body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+    
+    .card { background: rgba(255,255,255,0.05); padding: 25px; border-radius: 24px; width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.1); text-align: center; }
+    select { width: 100%; padding: 14px; border-radius: 12px; background: #1e293b; color: white; border: 1px solid #334155; font-size: 16px; margin: 15px 0; outline: none; }
+    
+    #videoWrapper { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; border-radius: 50%; overflow: hidden; border: 4px solid var(--primary); display: none; margin: 20px 0; }
     video { width: 100%; height: 100%; object-fit: cover; }
+    
+    .btn { width: 100%; background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 16px; }
+    .btn:disabled { background: #334155; cursor: not-allowed; }
 
-    .btn-start {
-      width: 100%;
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 15px;
-      border-radius: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 10px;
-    }
+    #status { margin-top: 15px; font-weight: 600; min-height: 24px; }
 
     /* Modal */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
-    .modal-content { background: white; color: #1e293b; padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; }
-    .btn-confirm { width: 100%; background: var(--success); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+    .modal-content { background: white; color: #0f172a; padding: 30px; border-radius: 24px; width: 100%; max-width: 380px; }
+    .btn-confirm { width: 100%; background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 20px; cursor: pointer; }
   </style>
 </head>
 <body>
 
-  <div class="selector-card" id="setupSection">
-    <h2 style="margin-bottom: 15px; font-size: 1.25rem;">📝 เลือกรายวิชา</h2>
-    <label for="subjectSelect">วิชาที่เข้าเรียนวันนี้:</label>
-    <select id="subjectSelect">
-      <option value="">กำลังโหลดรายชื่อวิชา...</option>
+  <div class="card" id="setupCard">
+    <h2 style="margin-bottom:10px;">🎓 เช็คชื่อเข้าเรียน</h2>
+    <p style="opacity:0.7; font-size:14px;">โปรดเลือกวิชาเรียนและกดปุ่มสแกน</p>
+    
+    <select id="subjectDropdown">
+      <option value="">🔄 กำลังโหลดวิชาจากชีต...</option>
     </select>
-    <button class="btn-start" id="startBtn" onclick="prepareScanner()">เปิดกล้องสแกนใบหน้า</button>
+    
+    <button class="btn" id="startBtn" onclick="openCamera()" disabled>โหลดข้อมูล...</button>
+    <div id="status">กำลังโหลดระบบ...</div>
   </div>
 
-  <div id="videoContainer">
+  <div id="videoWrapper">
     <video id="video" autoplay muted playsinline></video>
   </div>
 
-  <div id="statusText" style="margin-top: 15px; font-weight: 600;"></div>
-
-  <!-- Modal -->
   <div id="confirmModal" class="modal">
     <div class="modal-content">
-      <h3 style="color: var(--primary);">✅ ยืนยันตัวตนสำเร็จ</h3>
-      <div id="confirmDetails" style="text-align: left; margin: 20px 0; line-height: 1.8;"></div>
-      <button class="btn-confirm" id="finalBtn" onclick="submitAttendance()">ยืนยันบันทึกเวลาเรียน</button>
+      <h3 style="color:var(--primary); text-align:center;">ยืนยันตัวตนสำเร็จ</h3>
+      <div id="details" style="margin-top:20px; font-size:15px; line-height:1.8;"></div>
+      <button class="btn-confirm" id="finalBtn" onclick="saveToSheet()">ยืนยันเข้าเรียน</button>
+      <button style="width:100%; background:none; border:none; margin-top:15px; color:#64748b; cursor:pointer;" onclick="location.reload()">ยกเลิก</button>
     </div>
   </div>
 
   <script>
     const API_URL = localStorage.getItem('gasApiUrl');
+    const dropdown = document.getElementById('subjectDropdown');
+    const statusText = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
     const video = document.getElementById('video');
-    const statusText = document.getElementById('statusText');
-    const subjectSelect = document.getElementById('subjectSelect');
-    
-    let faceMatcher = null;
-    let subjects = [];
-    let selectedSubject = null;
-    let identifiedName = "";
+
+    let allSubjects = [];
+    let knownFaces = null;
+    let selectedSub = null;
+    let identifiedUser = "";
 
     async function init() {
-      if (!API_URL) {
-        statusText.innerText = "❌ กรุณาตั้งค่า API URL";
-        return;
-      }
+      if (!API_URL) return statusText.innerText = "❌ ไม่พบ API URL";
 
       try {
-        // โหลดวิชา
-        const subRes = await fetch(API_URL + "?action=getSubjects");
-        const subData = await subRes.json();
-        subjects = subData.subjects;
-        
-        subjectSelect.innerHTML = subjects.map((s, index) => 
-          `<option value="${index}">${s.id} - ${s.name}</option>`
-        ).join('');
+        // โหลดข้อมูลวิชาจากชีต Subjects
+        const resSub = await fetch(API_URL + "?action=getSubjects");
+        const dataSub = await resSub.json();
+        allSubjects = dataSub.subjects;
 
-        // โหลดใบหน้า
-        const faceRes = await fetch(API_URL + "?action=getKnownFaces");
-        const faceData = await faceRes.json();
-        if (faceData.faces.length > 0) {
-          const labeled = faceData.faces.map(f => new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d))));
-          faceMatcher = new faceapi.FaceMatcher(labeled, 0.5);
+        if (allSubjects.length > 0) {
+          dropdown.innerHTML = allSubjects.map((s, i) => `<option value="${i}">${s.id} - ${s.name}</option>`).join('');
+          startBtn.disabled = false;
+          startBtn.innerText = "เปิดกล้องสแกนใบหน้า";
+          statusText.innerText = "✅ พร้อมใช้งาน";
+        } else {
+          statusText.innerText = "❌ ไม่พบข้อมูลรายวิชาในชีต";
         }
 
-        // โหลด AI Models
+        // โหลดใบหน้า
+        const resFace = await fetch(API_URL + "?action=getKnownFaces");
+        const dataFace = await resFace.json();
+        if (dataFace.faces.length > 0) {
+          const labeled = dataFace.faces.map(f => new faceapi.LabeledFaceDescriptors(f.name, f.descriptors.map(d => new Float32Array(d))));
+          knownFaces = new faceapi.FaceMatcher(labeled, 0.5);
+        }
+
+        // โหลด AI
         await Promise.all([
           faceapi.nets.ssdMobilenetv1.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
           faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model'),
           faceapi.nets.faceRecognitionNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model')
         ]);
-
-        statusText.innerText = "✅ ระบบพร้อมใช้งาน";
       } catch (e) {
-        statusText.innerText = "❌ เกิดข้อผิดพลาดในการโหลดข้อมูล";
+        statusText.innerText = "❌ เกิดข้อผิดพลาดในการเชื่อมต่อ";
       }
     }
 
-    async function prepareScanner() {
-      const idx = subjectSelect.value;
-      if (idx === "") return alert("กรุณาเลือกวิชา");
-      selectedSubject = subjects[idx];
+    async function openCamera() {
+      const idx = dropdown.value;
+      if (idx === "") return;
+      selectedSub = allSubjects[idx];
 
-      document.getElementById('setupSection').style.display = "none";
-      document.getElementById('videoContainer').style.display = "block";
+      document.getElementById('setupCard').style.display = "none";
+      document.getElementById('videoWrapper').style.display = "block";
       statusText.innerText = "🔍 กำลังสแกนใบหน้า...";
 
       const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
       video.srcObject = stream;
 
       const loop = setInterval(async () => {
-        const detect = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-        if (detect && faceMatcher) {
-          const match = faceMatcher.findBestMatch(detect.descriptor);
+        const d = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+        if (d && knownFaces) {
+          const match = knownFaces.findBestMatch(d.descriptor);
           if (match.label !== 'unknown') {
             clearInterval(loop);
-            showModal(match.label);
+            showConfirmation(match.label);
           }
         }
       }, 1000);
     }
 
-    function showModal(name) {
-      identifiedName = name;
-      
+    function showConfirmation(name) {
+      identifiedUser = name;
       const now = new Date();
-      const [h, m] = selectedSubject.lateTime.split(':');
+      const [h, m] = selectedSub.lateTime.split(':');
       const limit = new Date(); limit.setHours(h, m, 0);
       const isLate = now > limit;
 
-      document.getElementById('confirmDetails').innerHTML = `
-        <b>ชื่อ-รหัส:</b> ${name}<br>
-        <b>วิชา:</b> ${selectedSubject.name}<br>
-        <b>ห้อง:</b> ${selectedSubject.room}<br>
-        <b>สถานะ:</b> <span style="color:${isLate?'red':'green'}">${isLate?'สาย':'ปกติ'}</span>
+      document.getElementById('details').innerHTML = `
+        <b>นักศึกษา:</b> ${name}<br>
+        <b>วิชา:</b> ${selectedSub.name} (${selectedSub.id})<br>
+        <b>ห้อง:</b> ${selectedSub.room}<br>
+        <b>เวลา:</b> ${now.toLocaleTimeString('th-TH')}<br>
+        <b>สถานะ:</b> <span style="color:${isLate?'#ef4444':'#10b981'}">${isLate?'มาสาย':'ปกติ'}</span>
       `;
       document.getElementById('confirmModal').style.display = "flex";
       video.srcObject.getTracks().forEach(t => t.stop());
     }
 
-    async function submitAttendance() {
+    async function saveToSheet() {
       const btn = document.getElementById('finalBtn');
       btn.disabled = true;
-      btn.innerText = "⌛ กำลังบันทึก...";
+      btn.innerText = "⏳ กำลังบันทึกลงชีต...";
+
+      const now = new Date();
+      const [h, m] = selectedSub.lateTime.split(':');
+      const limit = new Date(); limit.setHours(h, m, 0);
 
       try {
-        const now = new Date();
-        const [h, m] = selectedSubject.lateTime.split(':');
-        const limit = new Date(); limit.setHours(h, m, 0);
-
         const res = await fetch(API_URL, {
           method: 'POST',
           body: JSON.stringify({
             action: 'logAttendance',
-            name: identifiedName,
-            subject: selectedSubject.name,
-            room: selectedSubject.room,
+            name: identifiedUser,
+            subject: selectedSub.name,
+            room: selectedSub.room,
             isLate: now > limit
           })
         });
@@ -213,7 +170,7 @@
         alert(result.message);
         window.location.href = "index.html";
       } catch (e) {
-        alert("❌ บันทึกล้มเหลว");
+        alert("❌ ไม่สามารถบันทึกได้");
         btn.disabled = false;
       }
     }
