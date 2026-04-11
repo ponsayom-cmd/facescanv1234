@@ -3,139 +3,151 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>แผงควบคุมอาจารย์ - ข้อมูลการเข้าเรียน</title>
+  <title>ระบบจัดการข้อมูลอาจารย์</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; }
     body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
     .container { max-width: 1000px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     
-    .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    
-    .filter-bar { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
-    select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; min-width: 200px; }
-    
-    table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; }
-    th, td { padding: 15px; text-align: left; border-bottom: 1px solid #f1f5f9; }
-    th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 12px; text-transform: uppercase; }
-    
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .status-ontime { background: #dcfce7; color: #166534; }
-    .status-late { background: #fee2e2; color: #991b1b; }
+    .header-box { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px; }
+    .title-area h1 { margin: 0; font-size: 28px; color: #1e293b; }
+    .title-area p { margin: 5px 0 0; color: #64748b; }
 
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card { background: white; padding: 20px; border-radius: 16px; border-left: 4px solid var(--primary); }
-    .stat-label { font-size: 13px; color: #64748b; }
-    .stat-value { font-size: 24px; font-weight: 700; color: var(--primary); }
+    .selector-card { background: white; padding: 15px 20px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    select { padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 15px; min-width: 250px; background: #fff; cursor: pointer; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border-bottom: 4px solid #e2e8f0; }
+    .stat-card.active { border-color: var(--primary); }
+    .stat-val { font-size: 32px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+    .stat-label { font-size: 14px; color: #64748b; font-weight: 500; }
+
+    .btn-export { background: #1e293b; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    
+    .table-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #f8fafc; padding: 15px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; }
+    td { padding: 18px 15px; border-top: 1px solid #f1f5f9; font-size: 15px; }
+    
+    .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-ontime { background: #dcfce7; color: #166534; }
+    .badge-late { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="header">
-    <h1>👨‍🏫 แผงควบคุมอาจารย์</h1>
-    <button onclick="loadData()" style="padding:10px 20px; border-radius:8px; border:none; background:var(--primary); color:white; cursor:pointer;">🔄 รีเฟรชข้อมูล</button>
-  </div>
-
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-label">จำนวนการเข้าเรียนวันนี้</div><div class="stat-value" id="countToday">0</div></div>
-    <div class="stat-card" style="border-color:#10b981"><div class="stat-label">มาสาย</div><div class="stat-value" id="countLate">0</div></div>
-  </div>
-
-  <div class="card">
-    <div class="filter-bar">
-      <label>เลือกดูรายวิชา:</label>
-      <select id="subjectFilter" onchange="loadData()">
-        <option value="all">ทุกรายวิชา</option>
-      </select>
+  <div class="header-box">
+    <div class="title-area">
+      <p style="text-transform: uppercase; font-size: 12px; font-weight: 700; color: var(--primary); letter-spacing: 1px;">University Admin System</p>
+      <h1 id="displayTitle">โปรดเลือกรายวิชา</h1>
     </div>
+    <button class="btn-export" onclick="exportCSV()">📊 ส่งออก CSV (Excel)</button>
+  </div>
 
-    <div id="loadingText" style="text-align:center; padding:20px;">กำลังดึงข้อมูลจาก Google Sheets...</div>
+  <div class="selector-card">
+    <label>เลือกรายวิชา:</label>
+    <select id="subSelector" onchange="onSubjectChange()">
+      <option value="">-- เลือกวิชาเพื่อดูข้อมูล --</option>
+    </select>
+  </div>
 
-    <table id="logTable" style="display:none;">
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="statTotal">0</div><div class="stat-label">นักศึกษาทั้งหมด</div></div>
+    <div class="stat-card active"><div class="stat-val" id="statPresent">0</div><div class="stat-label">เข้าเรียนวันนี้</div></div>
+    <div class="stat-card"><div class="stat-val" id="statLate" style="color:#ef4444">0</div><div class="stat-label">มาสาย</div></div>
+    <div class="stat-card"><div class="stat-val" id="statAbsent" style="color:#64748b">0</div><div class="stat-label">ยังไม่มา</div></div>
+  </div>
+
+  <div class="table-container">
+    <table>
       <thead>
         <tr>
-          <th>นักศึกษา</th>
-          <th>วันที่</th>
-          <th>เวลา</th>
-          <th>วิชา</th>
+          <th>รหัส/ชื่อนักศึกษา</th>
+          <th>เวลาสแกน</th>
           <th>สถานะ</th>
         </tr>
       </thead>
-      <tbody id="logList"></tbody>
+      <tbody id="logList">
+        <tr><td colspan="3" style="text-align:center; color:#94a3b8; padding:40px;">กรุณาเลือกวิชาเพื่อโหลดข้อมูล</td></tr>
+      </tbody>
     </table>
   </div>
 </div>
 
 <script>
   const API_URL = localStorage.getItem('gasApiUrl');
+  let subjects = [];
+  let currentLogs = [];
 
   async function init() {
-    if (!API_URL) {
-      alert("กรุณาไปที่หน้า Config เพื่อตั้งค่า API URL ก่อน");
-      return;
-    }
-    await loadSubjects();
-    await loadData();
-  }
-
-  // ดึงรายชื่อวิชามาใส่ใน Dropdown
-  async function loadSubjects() {
+    if (!API_URL) return alert("โปรดตั้งค่า API URL ในหน้า Config");
+    
     try {
       const res = await fetch(`${API_URL}?action=getSubjects`);
       const data = await res.json();
-      const filter = document.getElementById('subjectFilter');
+      subjects = data.subjects;
       
-      data.subjects.forEach(s => {
+      const sel = document.getElementById('subSelector');
+      subjects.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s.name;
-        opt.innerText = `${s.id} - ${s.name}`;
-        filter.appendChild(opt);
+        opt.innerText = `${s.id} (${s.name})`;
+        sel.appendChild(opt);
       });
-    } catch (e) { console.error("Load subjects failed", e); }
+    } catch (e) { console.error(e); }
   }
 
-  // ดึงข้อมูลการเช็คชื่อ
-  async function loadData() {
-    const filterSub = document.getElementById('subjectFilter').value;
-    const loading = document.getElementById('loadingText');
-    const table = document.getElementById('logTable');
-    const list = document.getElementById('logList');
+  async function onSubjectChange() {
+    const subName = document.getElementById('subSelector').value;
+    if (!subName) return;
 
-    loading.style.display = "block";
-    table.style.display = "none";
+    document.getElementById('displayTitle').innerText = subName;
+    document.getElementById('logList').innerHTML = '<tr><td colspan="3" style="text-align:center; padding:40px;">⌛ กำลังโหลดข้อมูล...</td></tr>';
 
     try {
-      const res = await fetch(`${API_URL}?action=getSummary&subject=${encodeURIComponent(filterSub)}`);
+      const res = await fetch(`${API_URL}?action=getSummary&subject=${encodeURIComponent(subName)}`);
       const data = await res.json();
-      
-      list.innerHTML = "";
-      let lateCount = 0;
-      const today = new Date().toLocaleDateString('en-CA'); // yyyy-mm-dd
+      currentLogs = data.logs;
 
-      data.logs.forEach(log => {
-        if (log.status === 'Late') lateCount++;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
+      // คำนวณสถิติ
+      const totalReg = data.totalStudents || 0;
+      const present = data.logs.length;
+      const late = data.logs.filter(l => l.status === 'Late').length;
+      const absent = Math.max(0, totalReg - present);
+
+      document.getElementById('statTotal').innerText = totalReg;
+      document.getElementById('statPresent').innerText = present;
+      document.getElementById('statLate').innerText = late;
+      document.getElementById('statAbsent').innerText = absent;
+
+      // แสดงรายการ
+      const list = document.getElementById('logList');
+      list.innerHTML = data.logs.map(log => `
+        <tr>
           <td><b>${log.name}</b></td>
-          <td>${log.date.split('T')[0]}</td>
           <td>${log.time}</td>
-          <td>${log.subject}</td>
-          <td><span class="status-badge ${log.status === 'Late' ? 'status-late' : 'status-ontime'}">${log.status}</span></td>
-        `;
-        list.appendChild(tr);
-      });
+          <td><span class="badge ${log.status === 'Late' ? 'badge-late' : 'badge-ontime'}">${log.status}</span></td>
+        </tr>
+      `).join('') || '<tr><td colspan="3" style="text-align:center; padding:40px;">ยังไม่มีการเช็คชื่อในวิชานี้</td></tr>';
 
-      document.getElementById('countToday').innerText = data.logs.length;
-      document.getElementById('countLate').innerText = lateCount;
-
-      loading.style.display = "none";
-      table.style.display = "table";
     } catch (e) {
-      loading.innerText = "❌ ไม่สามารถดึงข้อมูลได้ โปรดตรวจสอบการตั้งค่า";
+      alert("ไม่สามารถดึงข้อมูลได้");
     }
+  }
+
+  function exportCSV() {
+    if (currentLogs.length === 0) return alert("ไม่มีข้อมูลให้ส่งออก");
+    let csv = "ชื่อ-รหัส,เวลา,วันที่,วิชา,สถานะ\n";
+    currentLogs.forEach(l => {
+      csv += `${l.name},${l.time},${l.date},${l.subject},${l.status}\n`;
+    });
+    const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Attendance_${document.getElementById('subSelector').value}.csv`;
+    link.click();
   }
 
   init();
