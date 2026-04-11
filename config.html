@@ -3,63 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>จัดการรายวิชา - Config</title>
+  <title>Admin - จัดการรายวิชาจาก Google Sheets</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --primary: #4f46e5; --danger: #ef4444; --bg: #f8fafc; }
+    :root { --primary: #4f46e5; --danger: #ef4444; --success: #10b981; --bg: #f8fafc; }
     body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: #1e293b; padding: 20px; margin: 0; }
-    .container { max-width: 600px; margin: 0 auto; }
-    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
-    h2 { margin-top: 0; color: var(--primary); font-size: 1.5rem; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; text-align: center; }
+    h2 { margin-top: 0; color: var(--primary); font-size: 1.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 20px; }
     
-    .form-group { margin-bottom: 15px; text-align: left; }
-    label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; }
-    input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; }
+    .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #64748b; }
+    input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: border 0.2s; }
+    input:focus { border-color: var(--primary); outline: none; }
     
-    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; font-size: 16px; }
-    .btn-save { background: var(--primary); color: white; }
-    .btn-delete { background: var(--danger); color: white; padding: 8px 12px; font-size: 12px; width: auto; }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+    .btn-save { background: var(--primary); color: white; margin-top: 10px; }
+    .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-delete { background: var(--danger); color: white; padding: 6px 12px; font-size: 12px; border-radius: 6px; }
     
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 12px; overflow: hidden; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
-    th { background: #f1f5f9; color: #64748b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: left; }
+    th, td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.05em; }
+    tr:last-child td { border-bottom: none; }
     
-    .api-section { font-size: 12px; color: #64748b; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+    .status-badge { display: inline-block; padding: 10px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; width: 100%; box-sizing: border-box; }
+    .loading { background: #eff6ff; color: #3b82f6; }
+    .error { background: #fef2f2; color: #ef4444; }
+
+    .api-config { background: #1e293b; color: white; padding: 20px; border-radius: 20px; margin-top: 40px; text-align: left; }
+    .api-config h3 { margin-top: 0; color: #818cf8; font-size: 1rem; }
+    .api-config input { background: #334155; border: 1px solid #475569; color: white; font-family: monospace; font-size: 12px; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="card">
-    <h2>➕ เพิ่มรายวิชาใหม่</h2>
-    <div class="form-group">
-      <label>รหัสวิชา</label>
-      <input type="text" id="subId" placeholder="เช่น CS101">
+    <h2>➕ เพิ่มรายวิชาใหม่ลง Google Sheets</h2>
+    <div class="grid-form">
+      <div class="form-group">
+        <label>รหัสวิชา</label>
+        <input type="text" id="subId" placeholder="เช่น CS101">
+      </div>
+      <div class="form-group">
+        <label>ชื่อวิชา</label>
+        <input type="text" id="subName" placeholder="เช่น Database System">
+      </div>
+      <div class="form-group">
+        <label>ห้องเรียน</label>
+        <input type="text" id="subRoom" placeholder="เช่น Room 502">
+      </div>
+      <div class="form-group">
+        <label>เริ่มเช็คสายตั้งแต่เวลา</label>
+        <input type="time" id="subLate" value="09:00">
+      </div>
     </div>
-    <div class="form-group">
-      <label>ชื่อวิชา</label>
-      <input type="text" id="subName" placeholder="เช่น โปรแกรมมิ่ง 1">
-    </div>
-    <div class="form-group">
-      <label>ห้องเรียน</label>
-      <input type="text" id="subRoom" placeholder="เช่น Lab 4">
-    </div>
-    <div class="form-group">
-      <label>เวลาที่เริ่มเช็คสาย (HH:mm)</label>
-      <input type="time" id="subLate" value="09:00">
-    </div>
-    <button class="btn btn-save" onclick="addSubject()">บันทึกลง Google Sheets</button>
+    <button class="btn btn-save" onclick="addSubject()">บันทึกข้อมูล</button>
   </div>
 
   <div class="card">
-    <h2>📚 รายวิชาทั้งหมด</h2>
-    <div id="loading">กำลังโหลดข้อมูล...</div>
+    <h2>📚 รายวิชาในระบบ (ดึงจาก Sheets)</h2>
+    <div id="statusArea"></div>
+    
     <table id="subjectTable" style="display:none;">
       <thead>
         <tr>
           <th>รหัส</th>
-          <th>ชื่อวิชา</th>
+          <th>รายวิชา</th>
           <th>ห้อง</th>
+          <th>เวลาสาย</th>
           <th>จัดการ</th>
         </tr>
       </thead>
@@ -67,10 +81,11 @@
     </table>
   </div>
 
-  <div class="api-section">
-    <p>API URL ปัจจุบัน:</p>
-    <input type="text" id="apiUrl" style="font-size: 10px;" onchange="saveApiUrl()">
-    <p style="margin-top:5px;">*หากมีการแก้ไขโค้ดใน Apps Script ต้อง Deploy เป็น New Version เสมอ</p>
+  <div class="api-config">
+    <h3>⚙️ การตั้งค่าระบบเชื่อมต่อ</h3>
+    <label style="color: #94a3b8; font-size: 12px;">Google Apps Script Web App URL:</label>
+    <input type="text" id="apiUrl" onchange="updateApiUrl()" placeholder="วาง URL ที่ได้จากขั้นตอน Deploy ที่นี่">
+    <p style="font-size: 11px; color: #94a3b8; margin-top: 10px;">* หากดึงข้อมูลไม่ได้ ให้ตรวจสอบว่า Deploy เป็น 'Anyone' หรือยัง และเปิดสิทธิ์การเข้าถึง Google Sheets ให้ Scripts ด้วย</p>
   </div>
 </div>
 
@@ -78,35 +93,56 @@
   let API_URL = localStorage.getItem('gasApiUrl') || "";
   document.getElementById('apiUrl').value = API_URL;
 
-  function saveApiUrl() {
+  const statusArea = document.getElementById('statusArea');
+  const table = document.getElementById('subjectTable');
+  const list = document.getElementById('subjectList');
+
+  function updateApiUrl() {
     API_URL = document.getElementById('apiUrl').value.trim();
     localStorage.setItem('gasApiUrl', API_URL);
     loadSubjects();
   }
 
   async function loadSubjects() {
-    if (!API_URL) return;
+    if (!API_URL) {
+      statusArea.innerHTML = '<div class="status-badge error">⚠️ กรุณาระบุ API URL ด้านล่าง</div>';
+      return;
+    }
+
+    statusArea.innerHTML = '<div class="status-badge loading">🔄 กำลังดึงข้อมูลจาก Google Sheets...</div>';
+    table.style.display = "none";
+
     try {
-      const res = await fetch(API_URL + "?action=getSubjects");
-      const data = await res.json();
-      const list = document.getElementById('subjectList');
+      const response = await fetch(`${API_URL}?action=getSubjects`);
+      if (!response.ok) throw new Error('Network response was not ok');
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        statusArea.innerHTML = `<div class="status-badge error">❌ ข้อผิดพลาด: ${data.error}</div>`;
+        return;
+      }
+
       list.innerHTML = "";
-      
-      data.subjects.forEach(s => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${s.id}</b></td>
-          <td>${s.name}</td>
-          <td>${s.room}</td>
-          <td><button class="btn btn-delete" onclick="deleteSubject('${s.id}')">ลบ</button></td>
-        `;
-        list.appendChild(tr);
-      });
-      
-      document.getElementById('loading').style.display = "none";
-      document.getElementById('subjectTable').style.display = "table";
+      if (data.subjects.length === 0) {
+        statusArea.innerHTML = '<div class="status-badge loading">ℹ️ ยังไม่มีข้อมูลรายวิชาในชีต</div>';
+      } else {
+        data.subjects.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><b>${s.id}</b></td>
+            <td>${s.name}</td>
+            <td>${s.room}</td>
+            <td>${s.lateTime}</td>
+            <td><button class="btn btn-delete" onclick="deleteSubject('${s.id}')">ลบ</button></td>
+          `;
+          list.appendChild(tr);
+        });
+        statusArea.innerHTML = "";
+        table.style.display = "table";
+      }
     } catch (e) {
-      document.getElementById('loading').innerText = "❌ ไม่สามารถโหลดข้อมูลได้";
+      statusArea.innerHTML = `<div class="status-badge error">❌ ไม่สามารถเชื่อมต่อกับ Script ได้ (${e.message})</div>`;
     }
   }
 
@@ -116,7 +152,7 @@
     const room = document.getElementById('subRoom').value.trim();
     const late = document.getElementById('subLate').value;
 
-    if (!id || !name) return alert("กรุณากรอกรหัสและชื่อวิชา");
+    if (!id || !name || !API_URL) return alert("ข้อมูลไม่ครบ หรือยังไม่ตั้งค่า API");
 
     try {
       const res = await fetch(API_URL, {
@@ -124,15 +160,19 @@
         body: JSON.stringify({ action: 'addSubject', id, name, room, lateTime: late })
       });
       const result = await res.json();
-      alert(result.message);
-      location.reload();
+      alert(result.message || "บันทึกสำเร็จ");
+      loadSubjects();
+      // Clear form
+      document.getElementById('subId').value = "";
+      document.getElementById('subName').value = "";
+      document.getElementById('subRoom').value = "";
     } catch (e) {
-      alert("❌ เกิดข้อผิดพลาด");
+      alert("❌ เกิดข้อผิดพลาดในการบันทึก");
     }
   }
 
   async function deleteSubject(id) {
-    if (!confirm(`คุณต้องการลบวิชา ${id} ใช่หรือไม่?`)) return;
+    if (!confirm(`ยืนยันการลบวิชา ${id}?`)) return;
     try {
       const res = await fetch(API_URL, {
         method: 'POST',
@@ -142,10 +182,11 @@
       alert(result.message);
       loadSubjects();
     } catch (e) {
-      alert("❌ ลบไม่สำเร็จ");
+      alert("❌ ไม่สามารถลบได้");
     }
   }
 
+  // โหลดข้อมูลทันทีถ้ามี URL
   if (API_URL) loadSubjects();
 </script>
 </body>
