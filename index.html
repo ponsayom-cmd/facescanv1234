@@ -5,267 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Smart Attendance System</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-  
   <style>
-    /* --- Base Styles --- */
+    :root { --primary: #34d399; --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      color: #1e293b;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px 60px;
-    }
-
-    /* Ambient Background Elements */
-    .bg-shape {
-      position: fixed;
-      border-radius: 50%;
-      filter: blur(80px);
-      z-index: -1;
-      opacity: 0.5;
-    }
-    .shape-1 { width: 300px; height: 300px; background: #dbeafe; top: -100px; right: -50px; }
-    .shape-2 { width: 250px; height: 250px; background: #ede9fe; bottom: -50px; left: -50px; }
-
-    .header {
-      text-align: center;
-      margin-bottom: 40px;
-      animation: fadeInDown 0.8s ease-out;
-    }
-
-    .header h1 {
-      font-size: 2rem;
-      font-weight: 800;
-      color: #0f172a;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
-
-    .header p {
-      color: #64748b;
-      font-size: 1rem;
-    }
-
-    /* --- Status Bar --- */
-    .api-status {
-      background: white;
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      border: 1px solid #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
-    .status-active .status-dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
-
-    /* --- Menu Grid --- */
-    .menu-section {
-      width: 100%;
-      max-width: 800px;
-      margin-bottom: 40px;
-    }
-
-    .section-label {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-      margin-bottom: 15px;
-      margin-left: 10px;
-      letter-spacing: 1px;
-    }
-
-    .menu-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-    }
-
-    .menu-card {
-      background: white;
-      padding: 24px;
-      border-radius: 24px;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: 1px solid #f1f5f9;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .menu-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-      border-color: #6366f1;
-    }
-
-    .card-icon {
-      font-size: 2rem;
-      width: 60px;
-      height: 60px;
-      background: #f8fafc;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.3s;
-    }
-
-    .menu-card:hover .card-icon {
-      background: #eff6ff;
-      transform: scale(1.1) rotate(-5deg);
-    }
-
-    .card-info h3 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #1e293b;
-      margin-bottom: 4px;
-    }
-
-    .card-info p {
-      font-size: 0.85rem;
-      color: #64748b;
-      line-height: 1.4;
-    }
-
-    /* Special Styling for Admin Area */
-    .admin-card { background: #f8fafc; border-style: dashed; }
-    .admin-card:hover { background: #ffffff; }
-
-    /* Animations */
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-up { animation: fadeInUp 0.6s ease-out backwards; }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: #f8fafc; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { color: var(--primary); font-size: 2rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 900px; }
+    .card { background: var(--card); padding: 25px; border-radius: 20px; text-decoration: none; color: white; border: 1px solid rgba(255,255,255,0.1); transition: 0.3s; display: flex; align-items: center; }
+    .card:hover { transform: translateY(-5px); border-color: var(--primary); background: rgba(52, 211, 153, 0.1); }
+    .icon { font-size: 2.5rem; margin-right: 20px; }
+    .title { font-weight: 700; font-size: 1.1rem; }
+    .desc { font-size: 0.85rem; color: #94a3b8; }
+    .api-status { margin-top: 20px; padding: 10px 20px; border-radius: 30px; font-size: 0.8rem; background: rgba(0,0,0,0.3); }
   </style>
 </head>
 <body>
 
-  <div class="bg-shape shape-1"></div>
-  <div class="bg-shape shape-2"></div>
-
   <div class="header">
-    <h1>ระบบเช็คชื่ออัจฉริยะ</h1>
-    <p>Smart Attendance & Classroom Management</p>
+    <h1>ระบบจัดการนักศึกษา</h1>
+    <p>Face Recognition & Attendance Management</p>
   </div>
 
-  <div id="statusIndicator" class="api-status">
-    <div class="status-dot"></div>
-    <span id="statusText">กำลังตรวจสอบการเชื่อมต่อ...</span>
+  <div class="grid">
+    <a href="register.html" class="card">
+      <div class="icon">👤</div>
+      <div><div class="title">ลงทะเบียนนักศึกษา</div><div class="desc">เพิ่มข้อมูลใบหน้าและประวัติ</div></div>
+    </a>
+    <a href="scan.html" class="card">
+      <div class="icon">📷</div>
+      <div><div class="title">เช็คชื่อรายวิชา</div><div class="desc">สแกนใบหน้าเข้าเรียน</div></div>
+    </a>
+    <a href="manage.html" class="card">
+      <div class="icon">📚</div>
+      <div><div class="title">จัดการรายวิชา/นักศึกษา</div><div class="desc">เพิ่มวิชา ลบรายชื่อ</div></div>
+    </a>
+    <a href="report.html" class="card">
+      <div class="icon">📊</div>
+      <div><div class="title">สถิติและรายงาน</div><div class="desc">ดูประวัติการเข้าเรียน</div></div>
+    </a>
+    <a href="config.html" class="card">
+      <div class="icon">⚙️</div>
+      <div><div class="title">ตั้งค่าระบบ</div><div class="desc">ตั้งค่า API และ GPS พิกัด</div></div>
+    </a>
   </div>
 
-  <!-- หมวดหมู่: สำหรับการใช้งานทั่วไป -->
-  <div class="menu-section animate-up" style="animation-delay: 0.2s;">
-    <div class="section-label">บันทึกข้อมูลและเข้าเรียน</div>
-    <div class="menu-grid">
-      <a href="scan.html" class="menu-card">
-        <div class="card-icon">📸</div>
-        <div class="card-info">
-          <h3>สแกนใบหน้า</h3>
-          <p>เช็คชื่อเข้าชั้นเรียนด้วย AI และตรวจสอบพิกัด GPS</p>
-        </div>
-      </a>
-      
-      <a href="register.html" class="menu-card">
-        <div class="card-icon">👤</div>
-        <div class="card-info">
-          <h3>ลงทะเบียนใหม่</h3>
-          <p>เพิ่มข้อมูลใบหน้าสำหรับนักศึกษาใหม่ในระบบ</p>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- หมวดหมู่: สำหรับผู้สอนและผู้ดูแล -->
-  <div class="menu-section animate-up" style="animation-delay: 0.4s;">
-    <div class="section-label">การจัดการและสถิติ</div>
-    <div class="menu-grid">
-      <a href="management.html" class="menu-card">
-        <div class="card-icon">🗂️</div>
-        <div class="card-info">
-          <h3>จัดการข้อมูล</h3>
-          <p>แก้ไขรายชื่อนักศึกษา และจัดการรายวิชาทั้งหมด</p>
-        </div>
-      </a>
-
-      <a href="analytics.html" class="menu-card">
-        <div class="card-icon">📊</div>
-        <div class="card-info">
-          <h3>รายงานสถิติ</h3>
-          <p>ดูภาพรวมการเข้าเรียนในรูปแบบกราฟเชิงวิเคราะห์</p>
-        </div>
-      </a>
-    </div>
-  </div>
-
-  <!-- หมวดหมู่: ตั้งค่าระดับสูง -->
-  <div class="menu-section animate-up" style="animation-delay: 0.6s;">
-    <div class="section-label">ระบบหลังบ้าน</div>
-    <div class="menu-grid">
-      <a href="admin.html" class="menu-card admin-card">
-        <div class="card-icon">⚙️</div>
-        <div class="card-info">
-          <h3>Admin Console</h3>
-          <p>เครื่องมือดูแลระบบ ล้างข้อมูล และความปลอดภัย</p>
-        </div>
-      </a>
-
-      <a href="config.html" class="menu-card admin-card">
-        <div class="card-icon">🌐</div>
-        <div class="card-info">
-          <h3>ตั้งค่า API</h3>
-          <p>ปรับเปลี่ยน URL การเชื่อมต่อ และพิกัดจุดเช็คชื่อ</p>
-        </div>
-      </a>
-    </div>
-  </div>
+  <div id="status" class="api-status">กำลังตรวจสอบการเชื่อมต่อ...</div>
 
   <script>
-    // ตรวจสอบสถานะการตั้งค่า API เบื้องต้น
-    window.onload = function() {
-      const apiUrl = localStorage.getItem('gasApiUrl');
-      const statusIndicator = document.getElementById('statusIndicator');
-      const statusText = document.getElementById('statusText');
-
-      if (!apiUrl) {
-        statusText.innerText = '⚠️ ยังไม่ได้ตั้งค่า API URL';
-        statusIndicator.style.borderColor = '#f87171';
-      } else {
-        // ทดสอบเชื่อมต่อแบบรวดเร็ว
-        fetch(apiUrl + '?action=getConfig')
-          .then(res => {
-            if(res.ok) {
-              statusIndicator.classList.add('status-active');
-              statusText.innerText = '● เชื่อมต่อระบบสำเร็จ';
-            }
-          })
-          .catch(err => {
-            statusText.innerText = '❌ เชื่อมต่อ API ไม่ได้';
-            statusIndicator.style.borderColor = '#f87171';
-          });
-      }
-    };
+    const API_URL = localStorage.getItem('gasApiUrl');
+    const statusEl = document.getElementById('status');
+    if (!API_URL) {
+      statusEl.innerHTML = '❌ ยังไม่ได้ผูกบัญชี API <a href="config.html" style="color:var(--primary)">คลิกเพื่อตั้งค่า</a>';
+    } else {
+      statusEl.innerHTML = '✅ เชื่อมต่อ API เรียบร้อย';
+    }
   </script>
 </body>
 </html>
