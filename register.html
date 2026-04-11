@@ -3,172 +3,117 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ลงทะเบียน - Smart Attendance</title>
+  <title>ลงทะเบียนนักศึกษา</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sarabun', sans-serif;
-      background: #f0f2f5;
-      color: #1c1e21;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      width: 100%;
-      max-width: 450px;
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    h2 { margin-bottom: 20px; color: #1877f2; }
-    #video {
-      width: 100%;
-      border-radius: 12px;
-      background: #000;
-      transform: scaleX(-1);
-      margin-bottom: 15px;
-    }
-    .form-group { text-align: left; margin-bottom: 15px; }
-    label { font-size: 0.9rem; font-weight: 600; color: #606770; display: block; margin-bottom: 5px; }
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #dddfe2;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-family: inherit;
-    }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      background: #1877f2;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-    .btn:hover { background: #166fe5; }
-    .btn:disabled { background: #e4e6eb; color: #bcc0c4; cursor: not-allowed; }
-    #status { margin-top: 15px; font-weight: 500; font-size: 0.95rem; }
-    .success { color: #42b72a; }
-    .error { color: #f02849; }
+    body { font-family: 'Sarabun', sans-serif; background: #f8fafc; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+    .card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    h2 { text-align: center; margin-bottom: 20px; color: #1e293b; }
+    video { width: 100%; border-radius: 15px; background: #000; transform: scaleX(-1); margin-bottom: 20px; }
+    .field { margin-bottom: 15px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; outline: none; }
+    input:focus { border-color: #6366f1; }
+    .btn { width: 100%; padding: 15px; background: #6366f1; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+    .btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+    #status { margin-top: 15px; text-align: center; font-size: 0.9rem; font-weight: 600; }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>ลงทะเบียนนักศึกษา</h2>
-  <video id="video" autoplay muted playsinline></video>
-  
-  <div class="form-group">
-    <label>รหัสนักศึกษา</label>
-    <input type="text" id="studentId" placeholder="เช่น 64012345">
+  <div class="card">
+    <h2>ลงทะเบียนนักศึกษา</h2>
+    <video id="video" autoplay muted playsinline></video>
+    
+    <div class="field">
+      <label>รหัสนักศึกษา</label>
+      <input type="text" id="studentId" placeholder="กรอกรหัสนักศึกษา">
+    </div>
+
+    <div class="field">
+      <label>ชื่อ-นามสกุล</label>
+      <input type="text" id="name" placeholder="ระบุชื่อจริง">
+    </div>
+
+    <div class="field">
+      <label>ชั้นปี</label>
+      <select id="year">
+        <option value="1">ปี 1</option><option value="2">ปี 2</option>
+        <option value="3">ปี 3</option><option value="4">ปี 4</option>
+      </select>
+    </div>
+
+    <button id="btnSave" class="btn" disabled>กำลังโหลด AI...</button>
+    <div id="status"></div>
+    <a href="index.html" style="display:block; text-align:center; margin-top:20px; color:#94a3b8; text-decoration:none;">กลับหน้าหลัก</a>
   </div>
 
-  <div class="form-group">
-    <label>ชื่อ-นามสกุล</label>
-    <input type="text" id="name" placeholder="ระบุชื่อจริง">
-  </div>
+  <script>
+    const API_URL = localStorage.getItem('gasApiUrl');
+    const video = document.getElementById('video');
+    const btn = document.getElementById('btnSave');
+    const status = document.getElementById('status');
 
-  <div class="form-group">
-    <label>ชั้นปี</label>
-    <select id="year">
-      <option value="1">ปี 1</option>
-      <option value="2">ปี 2</option>
-      <option value="3">ปี 3</option>
-      <option value="4">ปี 4</option>
-      <option value="อื่นๆ">อื่นๆ</option>
-    </select>
-  </div>
+    async function initAI() {
+      const URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
+      try {
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(URL);
+        await faceapi.nets.faceLandmarks68Net.loadFromUri(URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(URL);
+        const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+        video.srcObject = stream;
+        btn.innerText = '📸 บันทึกใบหน้า';
+        btn.disabled = false;
+      } catch (e) {
+        status.innerHTML = '<span style="color:red">❌ โหลดระบบผิดพลาด</span>';
+      }
+    }
 
-  <button id="btnSave" class="btn" disabled>รอโหลดระบบ AI...</button>
-  <div id="status"></div>
-  
-  <a href="index.html" style="display:block; margin-top:15px; color:#1877f2; text-decoration:none; font-size:0.9rem;">🏠 กลับหน้าหลัก</a>
-</div>
+    btn.onclick = async () => {
+      const id = document.getElementById('studentId').value.trim();
+      const name = document.getElementById('name').value.trim();
+      const year = document.getElementById('year').value;
 
-<script>
-  const API_URL = localStorage.getItem('gasApiUrl');
-  const video = document.getElementById('video');
-  const btnSave = document.getElementById('btnSave');
-  const statusDiv = document.getElementById('status');
+      if (!id || !name) return alert('กรุณากรอกข้อมูลให้ครบ');
+      if (!API_URL) return alert('กรุณาตั้งค่า API URL ก่อน');
 
-  // โหลด AI Models
-  async function init() {
-    try {
-      const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-      await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceLandmarks68Net.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      btn.disabled = true;
+      btn.innerText = '⏳ ตรวจจับใบหน้า...';
       
-      const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
-      video.srcObject = stream;
-      btnSave.disabled = false;
-      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
-    } catch (e) {
-      statusDiv.innerHTML = '<span class="error">❌ เข้าถึงกล้องหรือโหลด AI ไม่ได้</span>';
-    }
-  }
+      const detect = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+      if (!detect) {
+        alert('ไม่พบใบหน้า');
+        btn.disabled = false;
+        btn.innerText = '📸 บันทึกใบหน้า';
+        return;
+      }
 
-  btnSave.onclick = async () => {
-    const studentId = document.getElementById('studentId').value.trim();
-    const name = document.getElementById('name').value.trim();
-    const year = document.getElementById('year').value;
-
-    if (!studentId || !name) return alert('กรุณากรอกข้อมูลให้ครบ');
-    if (!API_URL) return alert('กรุณาตั้งค่า API URL ก่อน');
-
-    btnSave.disabled = true;
-    btnSave.innerText = '⏳ ตรวจจับใบหน้า...';
-    
-    const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-    
-    if (!detection) {
-      statusDiv.innerHTML = '<span class="error">❌ ไม่พบใบหน้า! ลองขยับหน้าให้ชัดเจน</span>';
-      btnSave.disabled = false;
-      btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
-      return;
-    }
-
-    statusDiv.innerText = '☁️ กำลังส่งข้อมูล...';
-
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          action: 'registerUser',
-          studentId: studentId,
-          name: name,
-          year: year,
-          faceDescriptor: Array.from(detection.descriptor)
-        })
-      });
-      const result = await response.json();
-      if (result.success) {
-        statusDiv.innerHTML = '<span class="success">✅ บันทึกสำเร็จ!</span>';
+      status.innerText = 'ส่งข้อมูลไป Google Sheets...';
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'registerUser',
+            studentId: id,
+            name: name,
+            year: year,
+            faceDescriptor: Array.from(detect.descriptor)
+          })
+        });
+        const result = await res.json();
+        status.innerHTML = '<span style="color:green">✅ ' + result.message + '</span>';
         document.getElementById('studentId').value = '';
         document.getElementById('name').value = '';
-      } else {
-        statusDiv.innerHTML = `<span class="error">❌ ${result.error}</span>`;
+      } catch (e) {
+        status.innerHTML = '<span style="color:red">❌ บันทึกล้มเหลว</span>';
       }
-    } catch (e) {
-      statusDiv.innerHTML = '<span class="error">❌ เชื่อมต่อ API ไม่ได้</span>';
-    }
+      btn.disabled = false;
+      btn.innerText = '📸 บันทึกใบหน้า';
+    };
 
-    btnSave.disabled = false;
-    btnSave.innerText = '📸 บันทึกข้อมูลใบหน้า';
-  };
-
-  init();
-</script>
+    initAI();
+  </script>
 </body>
 </html>
