@@ -3,176 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>สแกนใบหน้าเข้าเรียน</title>
+  <title>สแกนเข้าห้องเรียน</title>
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="js/api-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sarabun', sans-serif;
-      min-height: 100vh;
-      background: #0f172a;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    .video-wrapper {
-      position: relative;
-      width: 100%;
-      max-width: 500px;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 4px solid #38bdf8;
-    }
-    video { width: 100%; transform: scaleX(-1); display: block; }
+    body { font-family: 'Sarabun', sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
+    .video-container { position: relative; display: inline-block; border: 5px solid #38bdf8; border-radius: 15px; overflow: hidden; width: 100%; max-width: 400px; }
+    video { width: 100%; transform: scaleX(-1); }
     canvas { position: absolute; top: 0; left: 0; transform: scaleX(-1); }
-    
-    .info-box {
-      width: 100%;
-      max-width: 500px;
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 15px;
-      margin-top: 20px;
-      text-align: center;
-    }
-    .status-badge {
-      display: inline-block;
-      padding: 8px 16px;
-      border-radius: 20px;
-      background: #334155;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .btn-confirm {
-      background: #22c55e;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 10px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      width: 100%;
-      margin-top: 15px;
-      display: none;
-    }
+    .status-panel { margin-top: 20px; background: #1e293b; padding: 20px; border-radius: 10px; }
+    .btn { background: #22c55e; color: #fff; border: none; padding: 15px 30px; border-radius: 8px; font-weight: bold; cursor: pointer; display: none; width: 100%; margin-top: 10px; }
   </style>
 </head>
 <body>
-
-  <h1>🎓 เช็คชื่อเข้าเรียน</h1>
-  
-  <div class="video-wrapper">
+  <h1>🎓 สแกนใบหน้าเข้าเรียน</h1>
+  <div class="video-container">
     <video id="video" autoplay muted playsinline></video>
     <canvas id="canvas"></canvas>
   </div>
-
-  <div class="info-box">
-    <div id="status" class="status-badge">⏳ กำลังเตรียมระบบ AI...</div>
-    <h2 id="studentName">รอยืนยันตัวตน...</h2>
-    <p id="gpsStatus">Checking GPS...</p>
-    <button id="btnConfirm" class="btn-confirm">✅ ยืนยันการเข้าเรียน</button>
+  <div class="status-panel">
+    <div id="status">⏳ กำลังเตรียมระบบ...</div>
+    <h2 id="studentName">รอยืนยันใบหน้า...</h2>
+    <p id="location">Checking Location...</p>
+    <button id="btnConfirm" class="btn">✅ ยืนยันการเข้าเรียน</button>
   </div>
 
   <script>
     const video = document.getElementById('video');
-    const status = document.getElementById('status');
-    const nameDisplay = document.getElementById('studentName');
-    const gpsDisplay = document.getElementById('gpsStatus');
-    const btnConfirm = document.getElementById('btnConfirm');
-    
+    const statusTxt = document.getElementById('status');
+    const nameTxt = document.getElementById('studentName');
+    const btn = document.getElementById('btnConfirm');
     let faceMatcher = null;
-    let currentLat, currentLng;
-    let isIdentified = false;
+    let myLat, myLng;
 
-    async function init() {
-      // โหลด AI Models
-      await faceapi.nets.ssdMobilenetv1.loadFromUri('/models');
-      await faceapi.nets.faceLandmarks68Net.loadFromUri('/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-      
-      status.innerText = '📂 กำลังโหลดฐานข้อมูลนักเรียน...';
-      
-      // ดึงข้อมูลใบหน้าที่ลงทะเบียนไว้
+    async function setup() {
       try {
+        statusTxt.innerText = "⏳ โหลดโมเดล AI...";
+        // หากรันบนเครื่องตัวเอง ให้ตรวจสอบว่ามีโฟลเดอร์ models หรือใช้ URL สำรองได้
+        const MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models'; 
+        await faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmarks68Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+        statusTxt.innerText = "⏳ ดึงข้อมูลนักเรียน...";
         const res = await fetch(`${API_URL}?action=getKnownFaces`);
         const data = await res.json();
-        
-        if (data.length === 0) {
-          status.innerText = '❌ ยังไม่มีนักเรียนในระบบ';
-          return;
-        }
 
-        const labeledDescriptors = data.map(item => {
-          return new faceapi.LabeledFaceDescriptors(item.name, [new Float32Array(item.descriptor)]);
-        });
-        
-        faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
-        status.innerText = '📸 พร้อมสแกนใบหน้า';
-        startCamera();
-      } catch (err) {
-        status.innerText = '❌ โหลดฐานข้อมูลล้มเหลว';
+        if (data.length > 0) {
+          const labeledDescriptors = data.map(d => new faceapi.LabeledFaceDescriptors(d.name, [new Float32Array(d.descriptor)]));
+          faceMatcher = new faceapi.FaceMatcher(labeledDescriptors, 0.6);
+          statusTxt.innerText = "✅ พร้อมสแกนใบหน้า";
+          startStream();
+        } else {
+          statusTxt.innerText = "❌ ไม่พบข้อมูลนักเรียนในระบบ";
+        }
+      } catch (e) {
+        statusTxt.innerText = "❌ ข้อผิดพลาด: " + e.message;
       }
     }
 
-    async function startCamera() {
+    async function startStream() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
       video.srcObject = stream;
-      
-      // ตรวจสอบพิกัด GPS
-      navigator.geolocation.getCurrentPosition(pos => {
-        currentLat = pos.coords.latitude;
-        currentLng = pos.coords.longitude;
-        gpsDisplay.innerText = `📍 พิกัด: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)}`;
+      navigator.geolocation.getCurrentPosition(p => {
+        myLat = p.coords.latitude; myLng = p.coords.longitude;
+        document.getElementById('location').innerText = `📍 พิกัดปัจจุบันของคุณเรียบร้อยแล้ว`;
       });
 
-      // ลูปตรวจสอบใบหน้า
-      setInterval(async () => {
-        if (isIdentified) return;
-        
-        const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
-        if (detection) {
-          const match = faceMatcher.findBestMatch(detection.descriptor);
-          if (match.label !== 'unknown') {
-            nameDisplay.innerText = match.label;
-            nameDisplay.style.color = '#38bdf8';
-            btnConfirm.style.display = 'block';
-            status.innerText = '✅ พบข้อมูลนักเรียน';
-          } else {
-            nameDisplay.innerText = 'ไม่พบข้อมูล';
-            btnConfirm.style.display = 'none';
+      video.addEventListener('play', () => {
+        setInterval(async () => {
+          const detection = await faceapi.detectSingleFace(video).withFaceLandmarks().withFaceDescriptor();
+          if (detection) {
+            const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+            if (bestMatch.label !== 'unknown') {
+              nameTxt.innerText = bestMatch.label;
+              nameTxt.style.color = "#38bdf8";
+              btn.style.display = "block";
+            } else {
+              nameTxt.innerText = "ไม่พบนักเรียนในระบบ";
+              btn.style.display = "none";
+            }
           }
-        }
-      }, 1000);
+        }, 1000);
+      });
     }
 
-    btnConfirm.onclick = async () => {
-      btnConfirm.disabled = true;
-      btnConfirm.innerText = '⏳ กำลังบันทึก...';
-      
+    btn.onclick = async () => {
+      btn.innerText = "⏳ บันทึกข้อมูล...";
+      btn.disabled = true;
       try {
-        const response = await fetch(API_URL, {
+        const res = await fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({
-            action: 'logAttendance',
-            name: nameDisplay.innerText,
-            lat: currentLat,
-            lng: currentLng
-          })
+          body: JSON.stringify({ action: 'logAttendance', name: nameTxt.innerText, lat: myLat, lng: myLng })
         });
-        const result = await response.json();
+        const result = await res.json();
         alert(result.message);
         window.location.href = 'index.html';
-      } catch (e) {
-        alert('ผิดพลาด: ' + e.message);
-        btnConfirm.disabled = false;
-      }
+      } catch (e) { alert("ล้มเหลว: " + e.message); btn.disabled = false; }
     };
 
-    window.onload = init;
+    window.onload = setup;
   </script>
 </body>
 </html>
