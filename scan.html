@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>สแกนเข้าเรียน - Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Load Face-API -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.js"></script>
+  
+  <style>
+    /* --- Base Styles --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 50px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Orbs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { width: 400px; height: 400px; background: #dbeafe; top: -100px; right: -100px; }
+    body::after { width: 350px; height: 350px; background: #ede9fe; bottom: -80px; left: -80px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      width: 45px;
+      height: 45px;
+      border-radius: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #64748b;
+      font-size: 1.2rem;
+      transition: 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .btn-back:hover { background: #fff; transform: translateX(-3px); }
+
+    .page-title {
+      flex-grow: 1;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-right: 45px; /* Offset back button for center */
+    }
+
+    /* --- Status Card --- */
+    .status-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 15px 20px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.02);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background: #94a3b8;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(148, 163, 184, 0.5);
+    }
+    .status-dot.active { background: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.5); }
+
+    #mainStatus { font-size: 0.95rem; font-weight: 600; color: #475569; }
+
+    /* --- Scanner View --- */
+    .scanner-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/5;
+      background: #e2e8f0;
+      border-radius: 40px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+      border: 8px solid white;
+      margin-bottom: 30px;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+
+    /* Face Overlay / Scanning Animation */
+    .scan-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .face-guide {
+      width: 260px;
+      height: 320px;
+      border: 2px dashed rgba(255, 255, 255, 0.5);
+      border-radius: 130px 130px 100px 100px;
+      position: relative;
+    }
+
+    .scan-line {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 4px;
+      background: linear-gradient(90deg, transparent, #6366f1, transparent);
+      box-shadow: 0 0 15px #6366f1;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .scan-line.active {
+      opacity: 1;
+      animation: scanMove 3s infinite linear;
+    }
+
+    @keyframes scanMove {
+      0% { top: 10%; }
+      50% { top: 90%; }
+      100% { top: 10%; }
+    }
+
+    /* --- Controls --- */
+    .controls {
+      display: grid;
+      gap: 16px;
+    }
+
+    .select-box {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px;
+      font-family: inherit;
+      font-size: 1rem;
+      color: #1e293b;
+      outline: none;
+      transition: 0.3s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 20px;
+    }
+
+    .btn-main {
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 18px;
+      padding: 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+    }
+    .btn-main:hover { background: #4f46e5; transform: translateY(-2px); }
+    .btn-main:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
+
+    /* --- Modal --- */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 32px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.2);
+    }
+
+    .modal-icon {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    .modal h2 { margin-bottom: 8px; color: #1e293b; }
+    .modal p { color: #64748b; margin-bottom: 24px; font-size: 0.95rem; }
+
+    .modal-btns {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #64748b;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: #22c55e;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Animation */
+    .animate-up { animation: fadeInUp 0.6s ease-out forwards; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container animate-up">
+    <div class="top-nav">
+      <a href="index.html" class="btn-back">❮</a>
+      <h1 class="page-title">สแกนเข้าเรียน</h1>
+    </div>
+
+    <!-- แถบสถานะ -->
+    <div class="status-card">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="mainStatus">กำลังเริ่มระบบ...</span>
+    </div>
+
+    <!-- กล้องสแกน -->
+    <div class="scanner-wrapper">
+      <video id="video" autoplay muted playsinline></video>
+      <div class="scan-overlay">
+        <div class="face-guide"></div>
+        <div id="scanLine" class="scan-line"></div>
+      </div>
+    </div>
+
+    <!-- ส่วนควบคุม -->
+    <div class="controls">
+      <select id="subjectSelect" class="select-box">
+        <option value="">-- เลือกวิชา --</option>
+      </select>
+      
+      <button id="btnStart" class="btn-main">เริ่มการสแกน</button>
+    </div>
+  </div>
+
+  <!-- Modal ยืนยันการเช็คชื่อ -->
+  <div id="confirmModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-icon">🎉</div>
+      <h2 id="matchName">พบข้อมูลนักศึกษา!</h2>
+      <p>คุณอยู่ในพื้นที่ที่กำหนดและยืนยันตัวตนสำเร็จ<br>กดปุ่มเพื่อบันทึกเวลาเข้าเรียน</p>
+      <div class="modal-btns">
+        <button onclick="closeModal()" class="btn-secondary">ยกเลิก</button>
+        <button id="btnConfirm" class="btn-confirm">ยืนยันเข้างาน</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ดึง Element ต่างๆ (อิงตาม logic เดิมของคุณ)
+    const video = document.getElementById('video');
+    const mainStatus = document.getElementById('mainStatus');
+    const statusDot = document.getElementById('statusDot');
+    const scanLine = document.getElementById('scanLine');
+    const btnStart = document.getElementById('btnStart');
+    const confirmModal = document.getElementById('confirmModal');
+
+    // ฟังก์ชันเปิด/ปิด Modal (ตัวอย่าง)
+    function openModal(name) {
+      document.getElementById('matchName').innerText = 'สวัสดี, ' + name;
+      confirmModal.style.display = 'flex';
+      scanLine.classList.remove('active');
+    }
+
+    function closeModal() {
+      confirmModal.style.display = 'none';
+      scanLine.classList.add('active');
+    }
+
+    // เมื่อกดปุ่มเริ่ม
+    btnStart.addEventListener('click', () => {
+      btnStart.innerText = 'กำลังสแกน...';
+      btnStart.disabled = true;
+      scanLine.classList.add('active');
+      statusDot.classList.add('active');
+      mainStatus.innerText = 'สแกนหาใบหน้าและตำแหน่ง GPS...';
+      
+      // ตรงนี้ใส่ Logic การเปิดกล้อง และ Face API ของเดิมได้เลยครับ
+    });
+
+    // Mockup: ตัวอย่างกรณีเจอใบหน้า
+    // setTimeout(() => { openModal('สมชาย ใจดี'); }, 5000);
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>จัดการข้อมูล - Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- Base Styles --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      color: #334155;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .btn-back {
+      background: white;
+      border: 1px solid #e2e8f0;
+      width: 45px; height: 45px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: #64748b;
+      transition: 0.3s;
+    }
+    .btn-back:hover { transform: translateX(-3px); background: #f8fafc; }
+
+    .page-title {
+      flex-grow: 1;
+      text-align: center;
+      font-size: 1.4rem; font-weight: 700; color: #1e293b;
+      margin-right: 45px;
+    }
+
+    /* --- Tab System --- */
+    .tabs-container {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 8px;
+      border-radius: 20px;
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      border: 1px solid white;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      border-radius: 14px;
+      font-family: inherit;
+      font-weight: 600;
+      color: #64748b;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .tab-btn.active {
+      background: #6366f1;
+      color: white;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    /* --- Content Card --- */
+    .card {
+      background: white;
+      border-radius: 30px;
+      padding: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.7);
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .section-header h2 { font-size: 1.1rem; color: #1e293b; }
+
+    /* --- Forms --- */
+    .add-form {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 20px;
+      margin-bottom: 25px;
+      display: none; /* ซ่อนไว้ก่อนกดปุ่มเพิ่ม */
+    }
+
+    .add-form.active { display: block; animation: slideDown 0.3s ease-out; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .input-control {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .btn-submit {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* --- Tables --- */
+    .table-wrapper { overflow-x: auto; }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th { text-align: left; padding: 15px; color: #94a3b8; font-weight: 600; }
+    td { padding: 15px; border-bottom: 1px solid #f8fafc; }
+
+    .btn-delete {
+      color: #ef4444;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+    .btn-delete:hover { background: #fef2f2; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="top-nav">
+      <a href="report.html" class="btn-back">❮</a>
+      <h1 class="page-title">จัดการข้อมูลระบบ</h1>
+    </div>
+
+    <!-- แถบสลับระหว่างนักศึกษาและรายวิชา -->
+    <div class="tabs-container">
+      <button id="tab-students" class="tab-btn active" onclick="switchTab('students')">🎓 นักศึกษา</button>
+      <button id="tab-subjects" class="tab-btn" onclick="switchTab('subjects')">📚 รายวิชา</button>
+    </div>
+
+    <!-- ส่วนเนื้อหา -->
+    <div class="card">
+      
+      <!-- ส่วนจัดการนักศึกษา -->
+      <div id="panel-students">
+        <div class="section-header">
+          <h2>รายชื่อนักศึกษาทั้งหมด</h2>
+          <a href="register.html" style="text-decoration: none; font-size: 0.9rem; color: #6366f1; font-weight: 700;">+ ลงทะเบียนใหม่</a>
+        </div>
+        
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสนักศึกษา</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>ชั้นปี</th>
+                <th style="text-align: right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="studentList">
+              <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
+            </tbody>
+          </table>
+          <div id="studentEmpty" class="empty-state hidden">ไม่พบข้อมูลนักศึกษา</div>
+        </div>
+      </div>
+
+      <!-- ส่วนจัดการรายวิชา -->
+      <div id="panel-subjects" class="hidden">
+        <div class="section-header">
+          <h2>รายการรายวิชา</h2>
+          <button class="btn-submit" style="padding: 8px 16px; font-size: 0.85rem;" onclick="toggleAddSubject()">+ เพิ่มวิชา</button>
+        </div>
+
+        <!-- ฟอร์มเพิ่มวิชา -->
+        <div id="addSubjectForm" class="add-form">
+          <div class="input-grid">
+            <input type="text" id="subjectCode" class="input-control" placeholder="รหัสวิชา (เช่น SC101)">
+            <input type="text" id="subjectName" class="input-control" placeholder="ชื่อวิชา">
+          </div>
+          <button class="btn-submit" onclick="submitNewSubject()">บันทึกรายวิชา</button>
+          <button class="tab-btn" style="color: #94a3b8;" onclick="toggleAddSubject()">ยกเลิก</button>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสวิชา</th>
+                <th>ชื่อวิชา</th>
+                <th style="text-align: right;">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="subjectList">
+              <!-- ข้อมูลจะถูกเติมด้วย JavaScript -->
+            </tbody>
+          </table>
+          <div id="subjectEmpty" class="empty-state hidden">ยังไม่ได้เพิ่มรายวิชา</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_URL = localStorage.getItem('gasApiUrl');
+
+    window.onload = function() {
+      loadStudents();
+      loadSubjects();
+    };
+
+    function switchTab(type) {
+      document.getElementById('panel-students').classList.toggle('hidden', type !== 'students');
+      document.getElementById('panel-subjects').classList.toggle('hidden', type !== 'subjects');
+      
+      document.getElementById('tab-students').classList.toggle('active', type === 'students');
+      document.getElementById('tab-subjects').classList.toggle('active', type === 'subjects');
+    }
+
+    function toggleAddSubject() {
+      document.getElementById('addSubjectForm').classList.toggle('active');
+    }
+
+    // --- Student Logic ---
+    async function loadStudents() {
+      if (!API_URL) return;
+      try {
+        const res = await fetch(API_URL + "?action=getStudents");
+        const students = await res.json();
+        const tbody = document.getElementById('studentList');
+        tbody.innerHTML = '';
+
+        if (students.length === 0) {
+          document.getElementById('studentEmpty').classList.remove('hidden');
+          return;
+        }
+
+        students.forEach(std => {
+          const row = `<tr>
+            <td>${std.id || '-'}</td>
+            <td>${std.name}</td>
+            <td>${std.year || '-'}</td>
+            <td style="text-align: right;"><span class="btn-delete" onclick="deleteItem('student', '${std.id}')">ลบ</span></td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    // --- Subject Logic ---
+    async function loadSubjects() {
+      if (!API_URL) return;
+      try {
+        const res = await fetch(API_URL + "?action=getSubjects");
+        const subjects = await res.json();
+        const tbody = document.getElementById('subjectList');
+        tbody.innerHTML = '';
+
+        if (subjects.length === 0) {
+          document.getElementById('subjectEmpty').classList.remove('hidden');
+          return;
+        }
+
+        subjects.forEach(sub => {
+          const row = `<tr>
+            <td><strong>${sub.code}</strong></td>
+            <td>${sub.name}</td>
+            <td style="text-align: right;"><span class="btn-delete" onclick="deleteItem('subject', '${sub.code}')">ลบ</span></td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      } catch (e) { console.error(e); }
+    }
+
+    async function submitNewSubject() {
+      const code = document.getElementById('subjectCode').value;
+      const name = document.getElementById('subjectName').value;
+
+      if (!code || !name) return alert('กรุณากรอกข้อมูลให้ครบ');
+
+      try {
+        // ในระบบจริงจะส่ง POST ไปที่ action: addSubject
+        alert(`จำลองการบันทึก: ${code} - ${name}`);
+        toggleAddSubject();
+        // โหลดข้อมูลใหม่...
+      } catch (e) { alert('ผิดพลาด'); }
+    }
+
+    function deleteItem(type, id) {
+      if (confirm(`ยืนยันการลบ ${type === 'student' ? 'นักศึกษา' : 'รายวิชา'} นี้?`)) {
+        alert('ระบบจะลบข้อมูล ' + id + ' (เชื่อมต่อ Backend ในขั้นตอนถัดไป)');
+      }
+    }
+  </script>
+</body>
+</html>

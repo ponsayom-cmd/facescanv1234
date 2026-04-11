@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>จัดการระบบและรายงาน - Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- Base Styles --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+      position: relative;
+    }
+
+    /* Ambient Orbs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { width: 400px; height: 400px; background: #dbeafe; top: -100px; right: -100px; }
+    body::after { width: 350px; height: 350px; background: #ede9fe; bottom: -80px; left: -80px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      width: 45px; height: 45px;
+      border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: #64748b;
+      transition: 0.3s;
+    }
+
+    .page-title {
+      flex-grow: 1;
+      text-align: center;
+      font-size: 1.5rem; font-weight: 700; color: #1e293b;
+      margin-right: 45px;
+    }
+
+    /* --- Tab Navigation --- */
+    .tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 6px;
+      border-radius: 20px;
+      margin-bottom: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      gap: 5px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      border-radius: 15px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      color: #64748b;
+      transition: 0.3s;
+      font-size: 0.9rem;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: #6366f1;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    /* --- Content Section --- */
+    .content-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 25px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+      min-height: 400px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 { font-size: 1.1rem; color: #1e293b; }
+
+    .btn-add {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn-add:hover { background: #4f46e5; }
+
+    /* --- Table Styles --- */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 15px;
+      color: #94a3b8;
+      font-weight: 600;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #f8fafc;
+      color: #475569;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-blue { background: #eff6ff; color: #3b82f6; }
+    .badge-green { background: #ecfdf5; color: #10b981; }
+
+    .action-icon {
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 8px;
+      transition: 0.2s;
+    }
+    .action-icon:hover { background: #f1f5f9; color: #ef4444; }
+
+    /* --- Stats Grid --- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .stat-box {
+      background: white;
+      padding: 20px;
+      border-radius: 20px;
+      border: 1px solid #f1f5f9;
+    }
+
+    .stat-label { font-size: 0.8rem; color: #94a3b8; display: block; margin-bottom: 5px; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+
+    /* Animation */
+    .animate-in { animation: fadeInUp 0.6s ease-out forwards; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="container animate-in">
+    <div class="top-nav">
+      <a href="index.html" class="btn-back">❮</a>
+      <h1 class="page-title">แดชบอร์ดจัดการระบบ</h1>
+    </div>
+
+    <!-- แถบเลือกเมนู -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="showSection('report')">รายงานเข้าเรียน</button>
+      <button class="tab-btn" onclick="showSection('students')">นักศึกษา</button>
+      <button class="tab-btn" onclick="showSection('subjects')">รายวิชา</button>
+    </div>
+
+    <!-- ส่วนเนื้อหาหลัก -->
+    <div class="content-card">
+      
+      <!-- SECTION: REPORT -->
+      <div id="section-report">
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">เข้าเรียนวันนี้</span>
+            <span class="stat-value">42 คน</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">มาสาย</span>
+            <span class="stat-value">5 คน</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">รายวิชาทั้งหมด</span>
+            <span class="stat-value">8 วิชา</span>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h2>บันทึกเวลาล่าสุด</h2>
+          <button class="btn-add" style="background: #10b981;" onclick="exportExcel()">ดาวน์โหลด Excel</button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ชื่อ-นามสกุล</th>
+                <th>รายวิชา</th>
+                <th>เวลา</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable">
+              <!-- ข้อมูลสมมติ -->
+              <tr>
+                <td>สมชาย ใจดี (640001)</td>
+                <td><span class="badge badge-blue">Math 101</span></td>
+                <td>08:45:22</td>
+                <td><span class="badge badge-green">ปกติ</span></td>
+              </tr>
+              <tr>
+                <td>สมศรี มีสุข (640023)</td>
+                <td><span class="badge badge-blue">English I</span></td>
+                <td>09:10:05</td>
+                <td><span style="color: #f59e0b; font-size: 0.75rem; font-weight: 700;">สาย</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION: STUDENTS -->
+      <div id="section-students" class="hidden">
+        <div class="section-header">
+          <h2>รายชื่อนักศึกษาที่ลงทะเบียน</h2>
+          <a href="register.html" class="btn-add">+ เพิ่มนักศึกษา</a>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัส</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>ชั้นปี</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="studentTable">
+              <tr>
+                <td>640001</td>
+                <td>สมชาย ใจดี</td>
+                <td>ปี 3</td>
+                <td><span class="action-icon">🗑️ ลบ</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION: SUBJECTS -->
+      <div id="section-subjects" class="hidden">
+        <div class="section-header">
+          <h2>รายวิชาในระบบ</h2>
+          <button class="btn-add" onclick="addSubject()">+ เพิ่มวิชา</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัสวิชา</th>
+                <th>ชื่อวิชา</th>
+                <th>กลุ่มเรียน</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="subjectTable">
+              <tr>
+                <td>SC101</td>
+                <td>Introduction to AI</td>
+                <td>SEC 1</td>
+                <td><span class="action-icon">🗑️ ลบ</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // สลับหน้า Section
+    function showSection(name) {
+      // ซ่อนทุกหน้า
+      document.getElementById('section-report').classList.add('hidden');
+      document.getElementById('section-students').classList.add('hidden');
+      document.getElementById('section-subjects').classList.add('hidden');
+      
+      // เอา Active ออกจากทุกปุ่ม
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      // แสดงหน้าที่เลือก
+      document.getElementById('section-' + name).classList.remove('hidden');
+      
+      // ใส่ Active ให้ปุ่มที่คลิก
+      event.currentTarget.classList.add('active');
+
+      // โหลดข้อมูลจริง (ถ้ามี API)
+      if(name === 'report') loadAttendance();
+      if(name === 'students') loadStudents();
+      if(name === 'subjects') loadSubjects();
+    }
+
+    // ฟังก์ชันตัวอย่างการดึงข้อมูลจาก GAS
+    async function loadAttendance() {
+      const API_URL = localStorage.getItem('gasApiUrl');
+      if(!API_URL) return;
+      
+      try {
+        const res = await fetch(API_URL + '?action=getAttendanceReport');
+        const data = await res.json();
+        // นำ data มา render ลงตาราง (ข้ามขั้นตอนการเขียน Loop เพื่อความกระชับ)
+      } catch(e) { console.error(e); }
+    }
+
+    function addSubject() {
+      const name = prompt("กรุณาระบุชื่อรายวิชาใหม่:");
+      if(name) {
+        // ส่งไปบันทึกที่ GAS
+        alert("บันทึกวิชา " + name + " เรียบร้อย (รอเชื่อมต่อ Backend)");
+      }
+    }
+
+    function exportExcel() {
+      alert("กำลังส่งออกข้อมูลเป็นไฟล์ Excel...");
+    }
+  </script>
+</body>
+</html>

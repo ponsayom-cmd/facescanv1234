@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ตั้งค่าระบบ - Smart Attendance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- Base Styles --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+      color: #334155;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Orbs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.5;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before { width: 400px; height: 400px; background: #dbeafe; top: -100px; right: -100px; }
+    body::after { width: 350px; height: 350px; background: #ede9fe; bottom: -80px; left: -80px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .top-nav {
+      display: flex;
+      align-items: center;
+      margin-bottom: 32px;
+      width: 100%;
+    }
+
+    .btn-back {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      width: 45px; height: 45px;
+      border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; color: #64748b; font-size: 1.2rem;
+      transition: 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .btn-back:hover { background: #fff; transform: translateX(-3px); }
+
+    .page-title {
+      flex-grow: 1;
+      text-align: center;
+      font-size: 1.4rem; font-weight: 700; color: #1e293b;
+      margin-right: 45px;
+    }
+
+    /* --- Config Card --- */
+    .config-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(16px);
+      border-radius: 32px;
+      padding: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #6366f1;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex-grow: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .input-group { margin-bottom: 20px; }
+
+    .input-group label {
+      display: block; font-size: 0.85rem; font-weight: 700;
+      color: #64748b; margin-bottom: 8px; margin-left: 4px;
+    }
+
+    .input-control {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font-family: inherit; font-size: 0.95rem; color: #1e293b;
+      outline: none; transition: 0.3s;
+    }
+
+    .input-control:focus {
+      background: #fff;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    /* --- GPS Grid --- */
+    .gps-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-get-location {
+      grid-column: span 2;
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-get-location:hover { background: #e2e8f0; color: #1e293b; }
+
+    /* --- Action Buttons --- */
+    .btn-save {
+      width: 100%;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 18px;
+      font-size: 1.1rem; font-weight: 700;
+      cursor: pointer; transition: 0.3s;
+      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+      margin-top: 10px;
+    }
+    .btn-save:hover { background: #4f46e5; transform: translateY(-2px); }
+
+    .msg-box {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+    .msg-success { background: #ecfdf5; color: #059669; display: block; border: 1px solid #d1fae5; }
+    .msg-error { background: #fef2f2; color: #dc2626; display: block; border: 1px solid #fee2e2; }
+
+    /* Animation */
+    .animate-in { animation: fadeInUp 0.7s ease-out forwards; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .info-text {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container animate-in">
+    <div class="top-nav">
+      <a href="index.html" class="btn-back">❮</a>
+      <h1 class="page-title">ตั้งค่าระบบ</h1>
+    </div>
+
+    <div class="config-card">
+      <!-- ส่วน API -->
+      <div class="section-title">🔌 การเชื่อมต่อ Backend</div>
+      <div class="input-group">
+        <label for="apiUrl">Google Apps Script URL</label>
+        <input type="text" id="apiUrl" class="input-control" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+
+      <!-- ส่วน Location -->
+      <div class="section-title">📍 พิกัดสถานที่เช็คชื่อ</div>
+      
+      <button class="btn-get-location" onclick="getLocation()">
+        <span>📍 ดึงพิกัดจากตำแหน่งปัจจุบัน</span>
+      </button>
+
+      <div class="gps-grid">
+        <div class="input-group">
+          <label for="lat">Latitude</label>
+          <input type="number" id="lat" class="input-control" placeholder="13.XXXX" step="any">
+        </div>
+        <div class="input-group">
+          <label for="lng">Longitude</label>
+          <input type="number" id="lng" class="input-control" placeholder="100.XXXX" step="any">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label for="radius">ระยะรัศมีที่อนุญาต (กิโลเมตร)</label>
+        <input type="number" id="radius" class="input-control" placeholder="เช่น 0.1 (100 เมตร)" step="0.01">
+      </div>
+
+      <button id="btnSave" class="btn-save" onclick="saveAll()">
+        บันทึกการตั้งค่า
+      </button>
+
+      <div id="msgDiv" class="msg-box"></div>
+
+      <div class="info-text">
+        * <b>API URL</b>: ได้จากการ Publish Google Apps Script (Web App)<br>
+        * <b>รัศมี</b>: หากตั้งเป็น 0.05 หมายถึงต้องอยู่ห่างจากจุดที่ตั้งไว้ไม่เกิน 50 เมตร
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ดึงค่าเก่าจาก LocalStorage มาแสดง
+    window.onload = function() {
+      const savedUrl = localStorage.getItem('gasApiUrl');
+      if (savedUrl) document.getElementById('apiUrl').value = savedUrl;
+      
+      // กรณีมีการโหลดข้อมูล Config จาก Server เพิ่มเติม สามารถใส่ Logic ตรงนี้ได้
+    };
+
+    function getLocation() {
+      if (!navigator.geolocation) {
+        showMsg('❌ Browser นี้ไม่รองรับการดึงพิกัด', 'error');
+        return;
+      }
+      
+      showMsg('⏳ กำลังค้นหาตำแหน่ง...', '');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          document.getElementById('lat').value = pos.coords.latitude;
+          document.getElementById('lng').value = pos.coords.longitude;
+          showMsg('✅ ดึงพิกัดปัจจุบันเรียบร้อย', 'success');
+        },
+        err => {
+          showMsg('❌ ไม่สามารถดึงตำแหน่งได้: ' + err.message, 'error');
+        }
+      );
+    }
+
+    async function saveAll() {
+      const apiUrl = document.getElementById('apiUrl').value.trim();
+      const lat = document.getElementById('lat').value;
+      const lng = document.getElementById('lng').value;
+      const radius = document.getElementById('radius').value;
+
+      if (!apiUrl || !lat || !lng || !radius) {
+        showMsg('⚠️ กรุณากรอกข้อมูลให้ครบทุกช่อง', 'error');
+        return;
+      }
+
+      // บันทึก URL ลงเครื่อง
+      localStorage.setItem('gasApiUrl', apiUrl);
+
+      try {
+        showMsg('⏳ กำลังส่งข้อมูลไปยังเซิร์ฟเวอร์...', '');
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          mode: 'no-cors', // ตาม Logic ของเดิม
+          body: JSON.stringify({ action: 'saveConfig', lat, lng, radius })
+        });
+        
+        // หมายเหตุ: mode no-cors จะอ่าน response ไม่ได้ แต่จะถือว่าส่งสำเร็จ
+        showMsg('✅ บันทึกการตั้งค่าเรียบร้อย!', 'success');
+      } catch (e) {
+        showMsg('❌ เกิดข้อผิดพลาด: ' + e.message, 'error');
+      }
+    }
+
+    function showMsg(text, type) {
+      const msgDiv = document.getElementById('msgDiv');
+      msgDiv.innerText = text;
+      msgDiv.className = 'msg-box ' + (type === 'success' ? 'msg-success' : type === 'error' ? 'msg-error' : '');
+      msgDiv.style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
